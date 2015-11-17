@@ -475,7 +475,7 @@ public class ApplicationClassloader extends ClassLoader {
      */
     public Class getClassIgnoreCase(String name) {
         if (Play.usePrecompiled) {
-            Class result = classLookupCache.get(name);
+            Class result = classLookupCache.get(name.toLowerCase());
             if(result!=null){
                 return result;
             }
@@ -485,7 +485,7 @@ public class ApplicationClassloader extends ClassLoader {
             if (c.name.equalsIgnoreCase(name) || c.name.replace("$", ".").equalsIgnoreCase(name)) {
                 if (Play.usePrecompiled) {
                     Class result = c.javaClass;
-                    classLookupCache.put(name, result);
+                    classLookupCache.put(name.toLowerCase(), result);
                     return result;
                 }
                 return loadApplicationClass(c.name);
