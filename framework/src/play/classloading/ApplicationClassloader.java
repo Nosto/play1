@@ -313,6 +313,9 @@ public class ApplicationClassloader extends ClassLoader {
      * Detect Java changes
      */
     public void detectChanges() {
+        //always clean up class lookup cache if the app is trying to detect changes (happens in dev mode)
+        classLookupCache.clear();
+        
         // Now check for file modification
         List<ApplicationClass> modifieds = new ArrayList<ApplicationClass>();
         for (ApplicationClass applicationClass : Play.classes.all()) {
@@ -474,21 +477,22 @@ public class ApplicationClassloader extends ClassLoader {
      * @return a class
      */
     public Class getClassIgnoreCase(String name) {
-        if (Play.usePrecompiled) {
-            Class result = classLookupCache.get(name.toLowerCase());
-            if(result!=null){
-                return result;
-            }
+        Class result = classLookupCache.get(name.toLowerCase());
+        if(result!=null){
+            return result;
         }
         getAllClasses();
         for (ApplicationClass c : Play.classes.all()) {
             if (c.name.equalsIgnoreCase(name) || c.name.replace("$", ".").equalsIgnoreCase(name)) {
                 if (Play.usePrecompiled) {
-                    Class result = c.javaClass;
+                    result = c.javaClass;
+                    classLookupCache.put(name.toLowerCase(), result);
+                    return result;
+                }else{
+                    result = loadApplicationClass(c.name);
                     classLookupCache.put(name.toLowerCase(), result);
                     return result;
                 }
-                return loadApplicationClass(c.name);
             }
         }
         return null;
