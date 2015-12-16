@@ -54,7 +54,8 @@ public class PropertiesEnhancer extends Enhancer {
                 }
             }
             if (!hasDefaultConstructor && !ctClass.isInterface()) {
-                CtConstructor defaultConstructor = CtNewConstructor.make("public " + ctClass.getSimpleName() + "() {}", ctClass);
+                CtConstructor defaultConstructor = CtNewConstructor.make("public " + ctClass.getSimpleName()
+                        + "() { play.Logger.error(new Throwable(), \"Unexpected constructor call\", new Object[0]); }", ctClass);
                 ctClass.addConstructor(defaultConstructor);
             }
         } catch (Exception e) {
