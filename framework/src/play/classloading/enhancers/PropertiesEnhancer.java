@@ -31,6 +31,9 @@ public class PropertiesEnhancer extends Enhancer {
     private static final boolean usePropertiesEnhancer =
             Boolean.parseBoolean(Play.configuration.getProperty("play.propertiesEnhancer.enabled", "true"));
 
+    private static final boolean constructorsOnly =
+            Boolean.parseBoolean(Play.configuration.getProperty("play.propertiesEnhancer.constructorsOnly", "false"));
+
     @Override
     public void enhanceThisClass(ApplicationClass applicationClass) throws Exception {
 
@@ -63,7 +66,7 @@ public class PropertiesEnhancer extends Enhancer {
             throw new UnexpectedException("Error in PropertiesEnhancer", e);
         }
 
-        if (isScala(applicationClass)) {
+        if (isScala(applicationClass) || constructorsOnly) {
             // Temporary hack for Scala. Done.
             applicationClass.enhancedByteCode = ctClass.toBytecode();
             ctClass.defrost();
