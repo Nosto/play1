@@ -613,22 +613,27 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
 
         boolean secure = false;
 
-        final Request request = Request.createRequest(
-                remoteAddress,
-                method,
-                path,
-                querystring,
-                contentType,
-                body,
-                uri,
-                host,
-                isLoopback,
-                port,
-                domain,
-                secure,
-                getHeaders(nettyRequest),
-                getCookies(nettyRequest));
-
+        Request request = null;
+        try {
+            request = Request.createRequest(
+                    remoteAddress,
+                    method,
+                    path,
+                    querystring,
+                    contentType,
+                    body,
+                    uri,
+                    host,
+                    isLoopback,
+                    port,
+                    domain,
+                    secure,
+                    getHeaders(nettyRequest),
+                    getCookies(nettyRequest));
+        } catch (Exception e) {
+            Logger.error(e, "Failed to create request for %s", uri);
+            throw e;
+        }
 
         if (Logger.isTraceEnabled()) {
             Logger.trace("parseRequest: end");
@@ -681,7 +686,7 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
             // Log this, we can't call serve500()
             Throwable t = e.getCause();
             if (t instanceof TooLongFrameException) {
-                Logger.error("Request exceeds 8192 bytes");
+                Logger.error(t, "Request exceeds 8192 bytes");
             }
             e.getChannel().close();
         } catch (Exception ex) {
