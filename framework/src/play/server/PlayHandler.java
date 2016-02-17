@@ -663,7 +663,7 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
         if (value != null) {
             Set<Cookie> cookieSet = null;
             try{
-                ServerCookieDecoder.STRICT.decode(value);
+                cookieSet = ServerCookieDecoder.STRICT.decode(value);
             }catch(IllegalArgumentException e){
                 // Attempt to continue without cookies.
                 Logger.warn(e, "Failed decoding cookies from %s", value);
