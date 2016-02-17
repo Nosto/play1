@@ -661,7 +661,13 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
         Map<String, Http.Cookie> cookies = new HashMap<String, Http.Cookie>(16);
         String value = nettyRequest.headers().get(COOKIE);
         if (value != null) {
-            Set<Cookie> cookieSet =  ServerCookieDecoder.STRICT.decode(value);
+            Set<Cookie> cookieSet = null;
+            try{
+                ServerCookieDecoder.STRICT.decode(value);
+            }catch(IllegalArgumentException e){
+                // Attempt to continue without cookies.
+                Logger.warn(e, "Failed deconding cookies from %s", value);
+            }
             if (cookieSet != null) {
                 for (Cookie cookie : cookieSet) {
                     Http.Cookie playCookie = new Http.Cookie();
