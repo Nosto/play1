@@ -69,6 +69,7 @@ public class TestEngine {
     }
 
     private final static class ClassNameComparator implements Comparator<Class> {
+        @Override
         public int compare(Class aClass, Class bClass) {
             return aClass.getName().compareTo(bClass.getName());
         }

@@ -29,12 +29,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Router {
 
     static Pattern routePattern = new Pattern(
-            "^({method}GET|POST|PUT|DELETE|OPTIONS|HEAD|WS|\\*)[(]?({headers}[^)]*)(\\))?\\s+({path}.*/[^\\s]*)\\s+({action}[^\\s(]+)({params}.+)?(\\s*)$");
+            "^({method}GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD|WS|\\*)[(]?({headers}[^)]*)(\\))?\\s+({path}.*/[^\\s]*)\\s+({action}[^\\s(]+)({params}.+)?(\\s*)$");
     /**
      * Pattern used to locate a method override instruction in
      * request.querystring
      */
-    static Pattern methodOverride = new Pattern("^.*x-http-method-override=({method}GET|PUT|POST|DELETE).*$");
+    static Pattern methodOverride = new Pattern("^.*x-http-method-override=({method}GET|PUT|POST|PATCH|DELETE).*$");
     /**
      * Timestamp the routes file was last loaded at.
      */
@@ -215,7 +215,7 @@ public class Router {
 
     /**
      * In PROD mode and if the routes are already loaded, this does nothing.
-     * <p/>
+     * <p>
      * <p>
      * In DEV mode, this checks each routes file's "last modified" time to see
      * if the routes need updated.
@@ -572,6 +572,9 @@ public class Router {
                         actionDefinition.action = action;
                         actionDefinition.args = argsbackup;
                         actionDefinition.host = host;
+                if (Boolean.parseBoolean(Play.configuration.getProperty("application.forceSecureReverseRoutes", "false"))) {
+                    actionDefinition.secure();
+                }
                         return actionDefinition;
                     }
                 }

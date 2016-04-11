@@ -2,6 +2,7 @@ package play.libs;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -34,7 +35,7 @@ import play.utils.HTTP;
 /**
  * Simple HTTP client to make webservices requests.
  * 
- * <p/>
+ * <p>
  * Get latest BBC World news as a RSS content
  * 
  * <pre>
@@ -42,12 +43,12 @@ import play.utils.HTTP;
  * Document xmldoc = response.getXml();
  * // the real pain begins here...
  * </pre>
- * <p/>
+ * <p>
  * 
  * Search what Yahoo! thinks of google (starting from the 30th result).
  * 
  * <pre>
- * HttpResponse response = WS.url("http://search.yahoo.com/search?p=<em>%s</em>&pstart=1&b=<em>%s</em>", "Google killed me", "30").get();
+ * HttpResponse response = WS.url("http://search.yahoo.com/search?p=<em>%s</em>&amp;pstart=1&amp;b=<em>%s</em>", "Google killed me", "30").get();
  * if (response.getStatus() == 200) {
  *     html = response.getString();
  * }
@@ -488,6 +489,14 @@ public class WS extends PlayPlugin {
             throw new NotImplementedException();
         }
 
+        /** Execute a PATCH request. */
+        public abstract HttpResponse patch();
+
+        /** Execute a PATCH request asynchronously. */
+        public Promise<HttpResponse> patchAsync() {
+            throw new NotImplementedException();
+        }
+
         /** Execute a POST request. */
         public abstract HttpResponse post();
 
@@ -676,7 +685,7 @@ public class WS extends PlayPlugin {
          */
         public Document getXml(String encoding) {
             try {
-                InputSource source = new InputSource(getStream());
+                InputSource source = new InputSource(new StringReader(getString()));
                 source.setEncoding(encoding);
                 DocumentBuilder builder = XML.newDocumentBuilder();
                 return builder.parse(source);
@@ -690,9 +699,7 @@ public class WS extends PlayPlugin {
          * 
          * @return the body of the http response
          */
-        public String getString() {
-            return IO.readContentAsString(getStream(), getEncoding());
-        }
+        public abstract String getString();
 
         /**
          * get the response body as a string
@@ -701,9 +708,7 @@ public class WS extends PlayPlugin {
          *            string charset encoding
          * @return the body of the http response
          */
-        public String getString(String encoding) {
-            return IO.readContentAsString(getStream(), encoding);
-        }
+        public abstract String getString(String encoding);
 
         /**
          * Parse the response string as a query string.
@@ -727,6 +732,10 @@ public class WS extends PlayPlugin {
 
         /**
          * get the response as a stream
+         * <p>
+         * + this method can only be called onced because async implementation
+         * does not allow it to be called + multiple times +
+         * </p>
          * 
          * @return an inputstream
          */

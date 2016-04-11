@@ -1,6 +1,7 @@
 package play.classloading;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import play.Logger;
 import play.Play;
@@ -35,11 +36,6 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
  */
 public class ApplicationClassloader extends ClassLoader {
 
-    /**
-     * Internal cache for looking up loaded classes, avoids scanning multiple times for same class. Used only in precompiled mode.
-     */
-    private final ConcurrentHashMap<String, Class> classLookupCache = new ConcurrentHashMap<String, Class>();
-    
     private final ClassStateHashCreator classStateHashCreator = new ClassStateHashCreator();
 
     /**
@@ -219,9 +215,7 @@ public class ApplicationClassloader extends ClassLoader {
             return null;
         }
         try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            IOUtils.copyLarge(is, os);
-            return os.toByteArray();
+            return IOUtils.toByteArray(is);
         } catch (Exception e) {
             throw new UnexpectedException(e);
         } finally {
@@ -299,10 +293,12 @@ public class ApplicationClassloader extends ClassLoader {
         final Iterator<URL> it = urls.iterator();
         return new Enumeration<URL>() {
 
+            @Override
             public boolean hasMoreElements() {
                 return it.hasNext();
             }
 
+            @Override
             public URL nextElement() {
                 return it.next();
             }
@@ -313,9 +309,6 @@ public class ApplicationClassloader extends ClassLoader {
      * Detect Java changes
      */
     public void detectChanges() {
-        //always clean up class lookup cache if the app is trying to detect changes (happens in dev mode)
-        classLookupCache.clear();
-        
         // Now check for file modification
         List<ApplicationClass> modifieds = new ArrayList<ApplicationClass>();
         for (ApplicationClass applicationClass : Play.classes.all()) {
@@ -447,15 +440,24 @@ public class ApplicationClassloader extends ClassLoader {
 
                 Collections.sort(allClasses, new Comparator<Class>() {
 
+                    @Override
                     public int compare(Class o1, Class o2) {
                         return o1.getName().compareTo(o2.getName());
                     }
                 });
             }
+            allClassesByNormalizedName = new HashMap<String, ApplicationClass>(allClasses.size());
+            for (ApplicationClass clazz : Play.classes.all()) {
+                allClassesByNormalizedName.put(clazz.name.toLowerCase(), clazz);
+                if (clazz.name.contains("$")) {
+                    allClassesByNormalizedName.put(StringUtils.replace(clazz.name.toLowerCase(), "$", "."), clazz);
+                }
+            }
         }
         return allClasses;
     }
     List<Class> allClasses = null;
+    Map<String, ApplicationClass> allClassesByNormalizedName = null;
 
     /**
      * Retrieve all application classes assignable to this class.
@@ -463,13 +465,26 @@ public class ApplicationClassloader extends ClassLoader {
      * @return A list of class
      */
     public List<Class> getAssignableClasses(Class clazz) {
+        if (clazz == null) {
+            return Collections.emptyList();
+        }
         getAllClasses();
-        List<Class> results = new ArrayList<Class>();
-        for (ApplicationClass c : Play.classes.getAssignableClasses(clazz)) {
-            results.add(c.javaClass);
+        List<Class> results = assignableClassesByName.get(clazz.getName());
+        if (results != null) {
+            return results;
+        } else {
+            results = new ArrayList<Class>();
+            for (ApplicationClass c : Play.classes.getAssignableClasses(clazz)) {
+                results.add(c.javaClass);
+            }
+            // cache assignable classes
+            assignableClassesByName.put(clazz.getName(), results);
         }
         return results;
     }
+
+    // assignable classes cache
+    Map<String, List<Class>> assignableClassesByName = new HashMap<String, List<Class>>(100);
 
     /**
      * Find a class in a case insensitive way
@@ -477,23 +492,14 @@ public class ApplicationClassloader extends ClassLoader {
      * @return a class
      */
     public Class getClassIgnoreCase(String name) {
-        Class result = classLookupCache.get(name.toLowerCase());
-        if(result!=null){
-            return result;
-        }
         getAllClasses();
-        for (ApplicationClass c : Play.classes.all()) {
-            if (c.name.equalsIgnoreCase(name) || c.name.replace("$", ".").equalsIgnoreCase(name)) {
-                if (Play.usePrecompiled) {
-                    result = c.javaClass;
-                    classLookupCache.put(name.toLowerCase(), result);
-                    return result;
-                }else{
-                    result = loadApplicationClass(c.name);
-                    classLookupCache.put(name.toLowerCase(), result);
-                    return result;
-                }
+        String nameLowerCased = name.toLowerCase();
+        ApplicationClass c = allClassesByNormalizedName.get(nameLowerCased);
+        if (c != null) {
+            if (Play.usePrecompiled) {
+                return c.javaClass;
             }
+            return loadApplicationClass(c.name);
         }
         return null;
     }
