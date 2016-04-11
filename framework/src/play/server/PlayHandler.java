@@ -666,7 +666,7 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
 
         Request request = null;
         try {
-            final Request request = Request.createRequest(remoteAddress, method, path, querystring, contentType, body, uri, host, isLoopback,
+            request = Request.createRequest(remoteAddress, method, path, querystring, contentType, body, uri, host, isLoopback,
                     port, domain, secure, getHeaders(nettyRequest), getCookies(nettyRequest));
         } catch (Exception e) {
             Logger.error(e, "Failed to create request for %s", uri);

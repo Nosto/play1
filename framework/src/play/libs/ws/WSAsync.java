@@ -6,6 +6,8 @@ import org.w3c.dom.Document;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.ning.http.client.*;
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.AsyncHttpClientConfig.Builder;
 import com.ning.http.client.Realm.AuthScheme;
 import com.ning.http.client.Realm.RealmBuilder;
 import com.ning.http.client.multipart.ByteArrayPart;
@@ -660,24 +662,6 @@ public class WSAsync implements WSImpl {
             return result;
         }
 
-        @Override
-        public String getString() {
-            try {
-                return response.getResponseBody(getEncoding());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String getString(String encoding) {
-            try {
-                return response.getResponseBody(encoding);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
         /**
          * get the response as a stream
          * 
@@ -712,7 +696,9 @@ public class WSAsync implements WSImpl {
         public String getString() {
             try {
                 checkConsumed();
-                return super.getString();
+                return response.getResponseBody();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 consumed = true;
             }
@@ -722,7 +708,9 @@ public class WSAsync implements WSImpl {
         public String getString(String encoding) {
             try {
                 checkConsumed();
-                return super.getString(encoding);
+                return response.getResponseBody(encoding);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 consumed = true;
             }
