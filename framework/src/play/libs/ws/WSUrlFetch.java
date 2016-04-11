@@ -120,6 +120,16 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
+        @Override
+        public HttpResponse patch() {
+            try {
+                HttpURLConnection conn = prepare(new URL(getPreparedUrl("PATCH")), "PATCH");
+                return new HttpUrlfetchResponse(conn);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         /** Execute a POST request. */
         @Override
         public HttpResponse post() {
@@ -361,6 +371,15 @@ public class WSUrlFetch implements WSImpl {
         @Override
         public String getString() {
             return body;
+        }
+
+        @Override
+        public String getString(String encoding) {
+            try {
+                return new String(body.getBytes(), encoding);
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         /**

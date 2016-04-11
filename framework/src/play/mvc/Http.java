@@ -185,12 +185,12 @@ public class Http {
          */
         public String querystring;
         /**
-         * URL path (excluding scheme, host and port), starting with '/'<br/>
+         * URL path (excluding scheme, host and port), starting with '/'<br>
          * 
-         * <b>Example:</b><br/>
+         * <b>Example:</b><br>
          * With this full URL <code>http://localhost:9000/path0/path1</code>
-         * <br/>
-         * => <b>url</b> will be <code>/path0/path1</code>
+         * <br>
+         * =&gt; <b>url</b> will be <code>/path0/path1</code>
          */
         public String url;
         /**
@@ -266,6 +266,10 @@ public class Http {
          * The invoked controller class
          */
         public transient Class<? extends Controller> controllerClass;
+        /**
+         * The instance of invoked controller in case it uses non-static action methods.
+         */
+        public transient Controller controllerInstance;
         /**
          * Free space to store your request specific data
          */
@@ -390,7 +394,7 @@ public class Http {
                 }
             }
 
-            if (Play.configuration.getProperty("XForwardedOverwriteDomainAndPort", "true").toLowerCase().equals("true") && this.host != null
+            if (Play.configuration.getProperty("XForwardedOverwriteDomainAndPort", "false").toLowerCase().equals("true") && this.host != null
                     && !this.host.equals(_host)) {
                 if (this.host.contains(":")) {
                     final String[] hosts = this.host.split(":");
@@ -449,7 +453,7 @@ public class Http {
 
         /**
          * Automatically resolve request format from the Accept header (in this
-         * order : html > xml > json > text)
+         * order : html &gt; xml &gt; json &gt; text)
          */
         public void resolveFormat() {
 

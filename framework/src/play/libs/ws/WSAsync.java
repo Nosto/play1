@@ -1,41 +1,24 @@
 package play.libs.ws;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import javax.net.ssl.SSLContext;
 
 import org.w3c.dom.Document;
 import org.apache.commons.lang.NotImplementedException;
 
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.AsyncHttpClientConfig.Builder;
-import com.ning.http.client.ProxyServer;
 import com.ning.http.client.Realm.AuthScheme;
 import com.ning.http.client.Realm.RealmBuilder;
-import com.ning.http.client.Response;
 import com.ning.http.client.multipart.ByteArrayPart;
 import com.ning.http.client.multipart.FilePart;
 import com.ning.http.client.multipart.Part;
-
 import oauth.signpost.AbstractOAuthConsumer;
 import oauth.signpost.exception.OAuthCommunicationException;
 import oauth.signpost.exception.OAuthExpectationFailedException;
 import oauth.signpost.exception.OAuthMessageSignerException;
 import oauth.signpost.http.HttpRequest;
+import org.apache.commons.lang.NotImplementedException;
 import play.Logger;
 import play.Play;
 import play.libs.F.Promise;
@@ -46,10 +29,20 @@ import play.libs.WS.WSImpl;
 import play.libs.WS.WSRequest;
 import play.mvc.Http.Header;
 
+import javax.net.ssl.SSLContext;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.*;
+
 /**
  * Simple HTTP client to make webservices requests.
  * 
- * <p/>
+ * <p>
  * Get latest BBC World news as a RSS content
  * 
  * <pre>
@@ -57,12 +50,12 @@ import play.mvc.Http.Header;
  * Document xmldoc = response.getXml();
  * // the real pain begins here...
  * </pre>
- * <p/>
+ * <p>
  * 
  * Search what Yahoo! thinks of google (starting from the 30th result).
  * 
  * <pre>
- * HttpResponse response = WS.url("http://search.yahoo.com/search?p=<em>%s</em>&pstart=1&b=<em>%s</em>", "Google killed me", "30").get();
+ * HttpResponse response = WS.url("http://search.yahoo.com/search?p=<em>%s</em>&amp;pstart=1&amp;b=<em>%s</em>", "Google killed me", "30").get();
  * if (response.getStatus() == 200) {
  *     html = response.getString();
  * }
@@ -237,6 +230,10 @@ public class WSAsync implements WSImpl {
             return prepareAll(httpClient.prepareHead(getUrlWithoutQueryString()));
         }
 
+        public BoundRequestBuilder preparePatch() {
+            return prepareAll(httpClient.preparePatch(getUrlWithoutQueryString()));
+        }
+
         public BoundRequestBuilder preparePost() {
             return prepareAll(httpClient.preparePost(getUrlWithoutQueryString()));
         }
@@ -269,6 +266,24 @@ public class WSAsync implements WSImpl {
             return execute(prepareGet());
         }
 
+        /** Execute a PATCH request.*/
+        @Override
+        public HttpResponse patch() {
+            this.type = "PATCH";
+            sign();
+            try {
+                return new HttpAsyncResponse(prepare(preparePatch()).execute().get());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        /** Execute a PATCH request asynchronously.*/
+        @Override
+        public Promise<HttpResponse> patchAsync() {
+            this.type = "PATCH";
+            sign();
+            return execute(preparePatch());
+        }
         /** Execute a POST request. */
         @Override
         public HttpResponse post() {
@@ -681,7 +696,9 @@ public class WSAsync implements WSImpl {
         public String getString() {
             try {
                 checkConsumed();
-                return super.getString();
+                return response.getResponseBody();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 consumed = true;
             }
@@ -691,7 +708,9 @@ public class WSAsync implements WSImpl {
         public String getString(String encoding) {
             try {
                 checkConsumed();
-                return super.getString(encoding);
+                return response.getResponseBody(encoding);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             } finally {
                 consumed = true;
             }

@@ -265,16 +265,17 @@ public class Invoker {
             InvocationContext.current.remove();
         }
 
-        private void withinFilter(play.libs.F.Function0<Void> fct) throws Throwable {
-          for( PlayPlugin plugin :  Play.pluginCollection.getEnabledPlugins() ) {
-               if (plugin.getFilter() != null)
-                plugin.getFilter().withinFilter(fct);
-           }
+        private void withinFilter(final play.libs.F.Function0<Void> fct) throws Throwable {
+          final F.Option<PlayPlugin.Filter<Void>> filters = Play.pluginCollection.composeFilters();
+          if (filters.isDefined()) {
+            filters.get().withinFilter(fct);
+          }
         }
 
         /**
          * It's time to execute.
          */
+        @Override
         public void run() {
             if (waitInQueue != null) {
                 waitInQueue.stop();
@@ -285,6 +286,7 @@ public class Invoker {
                     before();
                     final AtomicBoolean executed = new AtomicBoolean(false);
                     this.withinFilter(new play.libs.F.Function0<Void>() {
+                        @Override
                         public Void apply() throws Throwable {
                             executed.set(true);
                             execute();
@@ -398,6 +400,7 @@ public class Invoker {
             if (task instanceof Promise) {
                 Promise<V> smartFuture = (Promise<V>) task;
                 smartFuture.onRedeem(new F.Action<F.Promise<V>>() {
+                    @Override
                     public void invoke(Promise<V> result) {
                         executor.submit(invocation);
                     }

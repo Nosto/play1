@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import play.Invoker;
 import play.Invoker.InvocationContext;
 import play.Logger;
@@ -13,6 +12,7 @@ import play.Play;
 import play.exceptions.JavaExecutionException;
 import play.exceptions.PlayException;
 import play.exceptions.UnexpectedException;
+import play.libs.F;
 import play.libs.F.Promise;
 import play.libs.Time;
 import play.mvc.Http;
@@ -113,6 +113,7 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
 
     private Callable<V> getJobCallingCallable(final Promise<V> smartFuture) {
       return new Callable<V>() {
+        @Override
         public V call() throws Exception {
           try {
             V result = Job.this.call();
@@ -171,15 +172,21 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
         call();
     }
 
-    private V withinFilter(play.libs.F.Function0<V> fct) throws Throwable {
-        for (PlayPlugin plugin :  Play.pluginCollection.getEnabledPlugins() ){
-           if (plugin.getFilter() != null) {
-              return (V)plugin.getFilter().withinFilter(fct);
-           }
-        }
-        return null;
-    }
 
+
+
+
+
+  private V withinFilter(final play.libs.F.Function0<V> fct) throws Throwable {
+    final F.Option<PlayPlugin.Filter<V>> filters = Play.pluginCollection.composeFilters();
+    if (!filters.isDefined()) {
+      return null;
+    } else {
+      return filters.get().withinFilter(fct);
+    }
+  }
+
+    @Override
     public V call() {
         Monitor monitor = null;
         try {
@@ -195,6 +202,7 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
                     // If we have a plugin, get him to execute the job within the filter. 
                     final AtomicBoolean executed = new AtomicBoolean(false);
                     result = this.withinFilter(new play.libs.F.Function0<V>() {
+                        @Override
                         public V apply() throws Throwable {
                             executed.set(true);
                             return doJobWithResult();
