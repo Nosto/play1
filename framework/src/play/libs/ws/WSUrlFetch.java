@@ -109,7 +109,9 @@ public class WSUrlFetch implements WSImpl {
             return u;
         }
 
-        /** Execute a GET request synchronously. */
+        /**
+         * Execute a GET request synchronously.
+         */
         @Override
         public HttpResponse get() {
             try {
@@ -130,7 +132,9 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
-        /** Execute a POST request. */
+        /**
+         * Execute a POST request.
+         */
         @Override
         public HttpResponse post() {
             try {
@@ -141,7 +145,9 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
-        /** Execute a PUT request. */
+        /**
+         * Execute a PUT request.
+         */
         @Override
         public HttpResponse put() {
             try {
@@ -151,7 +157,9 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
-        /** Execute a DELETE request. */
+        /**
+         * Execute a DELETE request.
+         */
         @Override
         public HttpResponse delete() {
             try {
@@ -161,7 +169,9 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
-        /** Execute a OPTIONS request. */
+        /**
+         * Execute a OPTIONS request.
+         */
         @Override
         public HttpResponse options() {
             try {
@@ -171,7 +181,9 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
-        /** Execute a HEAD request. */
+        /**
+         * Execute a HEAD request.
+         */
         @Override
         public HttpResponse head() {
             try {
@@ -181,7 +193,9 @@ public class WSUrlFetch implements WSImpl {
             }
         }
 
-        /** Execute a TRACE request. */
+        /**
+         * Execute a TRACE request.
+         */
         @Override
         public HttpResponse trace() {
             try {
@@ -193,18 +207,17 @@ public class WSUrlFetch implements WSImpl {
 
         private HttpURLConnection prepare(URL url, String method) {
             String keyStore = Play.configuration.getProperty("ssl.keyStore", System.getProperty("javax.net.ssl.keyStore"));
-            String keyStorePass = Play.configuration.getProperty("ssl.keyStorePassword",
-                    System.getProperty("javax.net.ssl.keyStorePassword"));
+            String keyStorePass = Play.configuration.getProperty("ssl.keyStorePassword", System.getProperty("javax.net.ssl.keyStorePassword"));
             Boolean CAValidation = Boolean.parseBoolean(Play.configuration.getProperty("ssl.cavalidation", "true"));
 
             if (this.username != null && this.password != null && this.scheme != null) {
                 String authString = null;
                 switch (this.scheme) {
-                case BASIC:
-                    authString = basicAuthHeader();
-                    break;
-                default:
-                    throw new RuntimeException("Scheme " + this.scheme + " not supported by the UrlFetch WS backend.");
+                    case BASIC:
+                        authString = basicAuthHeader();
+                        break;
+                    default:
+                        throw new RuntimeException("Scheme " + this.scheme + " not supported by the UrlFetch WS backend.");
                 }
                 this.headers.put("Authorization", authString);
             }
@@ -304,7 +317,7 @@ public class WSUrlFetch implements WSImpl {
 
         /**
          * you shouldn't have to create an HttpResponse yourself
-         * 
+         *
          * @param connection
          */
         public HttpUrlfetchResponse(HttpURLConnection connection) {
@@ -331,7 +344,7 @@ public class WSUrlFetch implements WSImpl {
 
         /**
          * the HTTP status code
-         * 
+         *
          * @return the status code of the http response
          */
         @Override
@@ -341,7 +354,7 @@ public class WSUrlFetch implements WSImpl {
 
         /**
          * the HTTP status text
-         * 
+         *
          * @return the status text of the http response
          */
         @Override
@@ -365,7 +378,7 @@ public class WSUrlFetch implements WSImpl {
 
         /**
          * get the response body as a string
-         * 
+         *
          * @return the body of the http response
          */
         @Override
@@ -384,7 +397,7 @@ public class WSUrlFetch implements WSImpl {
 
         /**
          * get the response as a stream
-         * 
+         *
          * @return an inputstream
          */
         @Override
@@ -394,6 +407,11 @@ public class WSUrlFetch implements WSImpl {
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        @Override
+        public byte[] getBytes() {
+            return body.getBytes();
         }
     }
 }
