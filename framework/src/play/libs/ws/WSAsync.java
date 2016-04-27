@@ -1,10 +1,5 @@
 package play.libs.ws;
 
-import javax.net.ssl.SSLContext;
-
-import org.w3c.dom.Document;
-import org.apache.commons.lang.NotImplementedException;
-
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.AsyncHttpClientConfig.Builder;
@@ -616,8 +611,6 @@ public class WSAsync implements WSImpl {
 
         private Response response;
 
-        private boolean consumed;
-
         /**
          * you shouldnt have to create an HttpResponse yourself
          * 
@@ -662,6 +655,33 @@ public class WSAsync implements WSImpl {
             return result;
         }
 
+        @Override
+        public String getString() {
+            try {
+                return response.getResponseBody(getEncoding());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public String getString(String encoding) {
+            try {
+                return response.getResponseBody(encoding);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public byte[] getBytes() {
+            try {
+                return response.getResponseBodyAsBytes();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         /**
          * get the response as a stream
          * 
@@ -669,7 +689,6 @@ public class WSAsync implements WSImpl {
          */
         @Override
         public InputStream getStream() {
-            checkConsumed();
             try {
                 return response.getResponseBodyAsStream();
             } catch (IllegalStateException e) {
@@ -681,47 +700,6 @@ public class WSAsync implements WSImpl {
                 throw new RuntimeException(e);
             }
         }
-
-        @Override
-        public Document getXml(String encoding) {
-            try {
-                checkConsumed();
-                return super.getXml(encoding);
-            } finally {
-                consumed = true;
-            }
-        }
-
-        @Override
-        public String getString() {
-            try {
-                checkConsumed();
-                return response.getResponseBody();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                consumed = true;
-            }
-        }
-
-        @Override
-        public String getString(String encoding) {
-            try {
-                checkConsumed();
-                return response.getResponseBody(encoding);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                consumed = true;
-            }
-        }
-
-        private void checkConsumed() {
-            if (consumed) {
-                throw new IllegalStateException("Stream already consumed");
-            }
-        }
-
 
     }
 
