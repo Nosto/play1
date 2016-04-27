@@ -1,40 +1,19 @@
 package play.libs.ws;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.SSLContext;
-
-import org.apache.commons.lang.NotImplementedException;
-
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.AsyncHttpClientConfig.Builder;
-import com.ning.http.client.ProxyServer;
 import com.ning.http.client.Realm.AuthScheme;
 import com.ning.http.client.Realm.RealmBuilder;
-import com.ning.http.client.Response;
 import com.ning.http.client.multipart.ByteArrayPart;
 import com.ning.http.client.multipart.FilePart;
 import com.ning.http.client.multipart.Part;
-
 import oauth.signpost.AbstractOAuthConsumer;
 import oauth.signpost.exception.OAuthCommunicationException;
 import oauth.signpost.exception.OAuthExpectationFailedException;
 import oauth.signpost.exception.OAuthMessageSignerException;
 import oauth.signpost.http.HttpRequest;
+import org.apache.commons.lang.NotImplementedException;
 import play.Logger;
 import play.Play;
 import play.libs.F.Promise;
@@ -45,21 +24,31 @@ import play.libs.WS.WSImpl;
 import play.libs.WS.WSRequest;
 import play.mvc.Http.Header;
 
+import javax.net.ssl.SSLContext;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.*;
+
 /**
  * Simple HTTP client to make webservices requests.
- *
+ * 
  * <p>
  * Get latest BBC World news as a RSS content
- *
+ * 
  * <pre>
  * HttpResponse response = WS.url("http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/rss.xml").get();
  * Document xmldoc = response.getXml();
  * // the real pain begins here...
  * </pre>
  * <p>
- *
+ * 
  * Search what Yahoo! thinks of google (starting from the 30th result).
- *
+ * 
  * <pre>
  * HttpResponse response = WS.url("http://search.yahoo.com/search?p=<em>%s</em>&amp;pstart=1&amp;b=<em>%s</em>", "Google killed me", "30").get();
  * if (response.getStatus() == 200) {
@@ -283,7 +272,6 @@ public class WSAsync implements WSImpl {
                 throw new RuntimeException(e);
             }
         }
-
         /** Execute a PATCH request asynchronously.*/
         @Override
         public Promise<HttpResponse> patchAsync() {
@@ -291,7 +279,6 @@ public class WSAsync implements WSImpl {
             sign();
             return execute(preparePatch());
         }
-
         /** Execute a POST request. */
         @Override
         public HttpResponse post() {
@@ -414,23 +401,23 @@ public class WSAsync implements WSImpl {
             if (this.username != null && this.password != null && this.scheme != null) {
                 AuthScheme authScheme;
                 switch (this.scheme) {
-                    case DIGEST:
-                        authScheme = AuthScheme.DIGEST;
-                        break;
-                    case NTLM:
-                        authScheme = AuthScheme.NTLM;
-                        break;
-                    case KERBEROS:
-                        authScheme = AuthScheme.KERBEROS;
-                        break;
-                    case SPNEGO:
-                        authScheme = AuthScheme.SPNEGO;
-                        break;
-                    case BASIC:
-                        authScheme = AuthScheme.BASIC;
-                        break;
-                    default:
-                        throw new RuntimeException("Scheme " + this.scheme + " not supported by the UrlFetch WS backend.");
+                case DIGEST:
+                    authScheme = AuthScheme.DIGEST;
+                    break;
+                case NTLM:
+                    authScheme = AuthScheme.NTLM;
+                    break;
+                case KERBEROS:
+                    authScheme = AuthScheme.KERBEROS;
+                    break;
+                case SPNEGO:
+                    authScheme = AuthScheme.SPNEGO;
+                    break;
+                case BASIC:
+                    authScheme = AuthScheme.BASIC;
+                    break;
+                default:
+                    throw new RuntimeException("Scheme " + this.scheme + " not supported by the UrlFetch WS backend.");
                 }
                 builder.setRealm((new RealmBuilder()).setScheme(authScheme).setPrincipal(this.username).setPassword(this.password)
                         .setUsePreemptiveAuth(true).build());
@@ -626,7 +613,7 @@ public class WSAsync implements WSImpl {
 
         /**
          * you shouldnt have to create an HttpResponse yourself
-         *
+         * 
          * @param response
          */
         public HttpAsyncResponse(Response response) {
@@ -635,7 +622,7 @@ public class WSAsync implements WSImpl {
 
         /**
          * the HTTP status code
-         *
+         * 
          * @return the status code of the http response
          */
         @Override
@@ -645,7 +632,7 @@ public class WSAsync implements WSImpl {
 
         /**
          * the HTTP status text
-         *
+         * 
          * @return the status text of the http response
          */
         @Override
@@ -697,7 +684,7 @@ public class WSAsync implements WSImpl {
 
         /**
          * get the response as a stream
-         *
+         * 
          * @return an inputstream
          */
         @Override
@@ -706,9 +693,9 @@ public class WSAsync implements WSImpl {
                 return response.getResponseBodyAsStream();
             } catch (IllegalStateException e) {
                 return new ByteArrayInputStream(new byte[] {}); // Workaround
-                // AHC's bug on
-                // empty
-                // responses
+                                                                // AHC's bug on
+                                                                // empty
+                                                                // responses
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
