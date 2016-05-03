@@ -1,7 +1,10 @@
 package play.db.jpa;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.hibernate.ejb.Ejb3Configuration;
 
 import play.Logger;
@@ -117,7 +120,10 @@ public class JPAPlugin extends PlayPlugin {
     @Override
     public void onApplicationStart() {  
         org.hibernate.ejb.HibernatePersistence persistence = new org.hibernate.ejb.HibernatePersistence();
-        org.apache.log4j.Logger.getLogger("org.hibernate.SQL").setLevel(Level.OFF);
+        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        LoggerConfig loggerConfig = ctx.getConfiguration().getLoggerConfig("org.hibernate.SQL");
+        loggerConfig.setLevel(Level.OFF);
+        ctx.updateLoggers();
 
         Set<String> dBNames = Configuration.getDbNames();
         for (String dbName : dBNames) {
@@ -185,7 +191,10 @@ public class JPAPlugin extends PlayPlugin {
             properties.put("hibernate.dialect", getDefaultDialect(dbConfig, dbConfig.getProperty("db.driver")));
             
             if (dbConfig.getProperty("jpa.debugSQL", "false").equals("true")) {
-                org.apache.log4j.Logger.getLogger("org.hibernate.SQL").setLevel(Level.ALL);
+                ctx = (LoggerContext) LogManager.getContext(false);
+                loggerConfig = ctx.getConfiguration().getLoggerConfig("org.hibernate.SQL");
+                loggerConfig.setLevel(Level.ALL);
+                ctx.updateLoggers();
             }
 
             Thread thread = Thread.currentThread();
