@@ -96,7 +96,8 @@ public class Logger {
                         Play.getFile("test-result").mkdir();
                     }
                     Layout layout = PatternLayout.newBuilder().withPattern("%d{DATE} %-5p ~ %m%n").build();
-                    Appender testLog = FileAppender.createAppender("test-result/application.log", "true", "true", "TestFile", "true", "true", "true", "8192", layout, null, "true", null, null);
+                    Appender testLog = FileAppender.createAppender("test-result/application.log", "true", "true", "TestFile", "true", "true", "true", "8192", layout, null, "false", null, null);
+                    testLog.start();
                     LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
                     LoggerConfig loggerConfig = ctx.getConfiguration().getRootLogger();
                     loggerConfig.addAppender(testLog, org.apache.logging.log4j.Level.DEBUG, null);
