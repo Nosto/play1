@@ -65,9 +65,7 @@ public class Logger {
     public static void init() {
         String log4jPath = Play.configuration.getProperty("application.log.path", "/log4j.xml");
         URL log4jConf = Logger.class.getResource(log4jPath);
-        boolean isXMLConfig = log4jPath.endsWith(".xml");
         if (log4jConf == null) { // try again with the .properties
-            isXMLConfig = false;
             log4jPath = Play.configuration.getProperty("application.log.path", "/log4j.properties");
             log4jConf = Logger.class.getResource(log4jPath);
         }
@@ -119,7 +117,7 @@ public class Logger {
         } else {
             LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
             LoggerConfig loggerConfig = ctx.getConfiguration().getLoggerConfig(Logger.juli.getName());
-            loggerConfig.setLevel(org.apache.logging.log4j.Level.OFF);
+            loggerConfig.setLevel(org.apache.logging.log4j.Level.toLevel(level));
             ctx.updateLoggers();
             if (redirectJuli) {
                 java.util.logging.Logger rootLogger = java.util.logging.Logger.getLogger("");
