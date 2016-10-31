@@ -34,7 +34,7 @@ public class PlayJUnitRunner extends BlockJUnit4ClassRunner implements Filterabl
         this.tclass = testClass;
     }
 
-    public static Class resolve(Class testClass) {
+    private static Class resolve(Class testClass) {
         synchronized (Play.class) {
             if (!Play.started) {
                 Play.init(new File("."), PlayJUnitRunner.getPlayId());
