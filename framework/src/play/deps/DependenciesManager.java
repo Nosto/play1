@@ -103,7 +103,7 @@ public class DependenciesManager {
 
     public void sync(List<File> installed) {
 
-        List<File> notSync = new ArrayList<File>();
+        List<File> notSync = new ArrayList<>();
 
         File[] paths = new File[]{
             new File(application, "lib"),
@@ -163,7 +163,7 @@ public class DependenciesManager {
     public Set<String> retrieveModules() throws Exception {
     	File ivyModule = new File(application, "conf/dependencies.yml");
         if(ivyModule == null || !ivyModule.exists()) {
-            return new LinkedHashSet<String>();
+            return new LinkedHashSet<>();
         }
     	return YamlParser.getOrderedModuleList(ivyModule);
     }
@@ -171,11 +171,10 @@ public class DependenciesManager {
     public List<File> retrieve(ResolveReport report) throws Exception {
 	    	
         // Track missing artifacts
-        List<ArtifactDownloadReport> missing = new ArrayList<ArtifactDownloadReport>();
+        List<ArtifactDownloadReport> missing = new ArrayList<>();
 
-        List<ArtifactDownloadReport> artifacts = new ArrayList<ArtifactDownloadReport>();
-        for (Iterator iter = report.getDependencies().iterator(); iter.hasNext();) {
-            IvyNode node = (IvyNode) iter.next();
+        List<ArtifactDownloadReport> artifacts = new ArrayList<>();
+        for (IvyNode node : ((List<IvyNode>) report.getDependencies())) {
             if (node.isLoaded() && !node.isCompletelyEvicted()) {
                 ArtifactDownloadReport[] adr = report.getArtifactsReports(node.getResolvedId());
                 for (ArtifactDownloadReport artifact : adr) {
@@ -189,7 +188,7 @@ public class DependenciesManager {
                             if(isPlayModule(artifact)){
                                 String mName = artifact.getLocalFile().getName();
                                 if (mName.endsWith(".jar") || mName.endsWith(".zip")) {
-                            	mName = mName.substring(0, mName.length() - 4); 
+                                    mName = mName.substring(0, mName.length() - 4); 
                                 }
                             }
                         }
@@ -218,7 +217,7 @@ public class DependenciesManager {
             }
         }
 
-        List<File> installed = new ArrayList<File>();
+        List<File> installed = new ArrayList<>();
 
         // Install
         if (artifacts.isEmpty()) {
@@ -379,7 +378,7 @@ public class DependenciesManager {
         ivySettings.setDefaultUseOrigin(true);
         PlayConflictManager conflictManager = new PlayConflictManager();
         ivySettings.addConflictManager("playConflicts", conflictManager);
-        ivySettings.addConflictManager("defaultConflicts", conflictManager.deleguate);
+        ivySettings.addConflictManager("defaultConflicts", conflictManager.delegate);
         ivySettings.setDefaultConflictManager(conflictManager);
 
         Ivy ivy = Ivy.newInstance(ivySettings);

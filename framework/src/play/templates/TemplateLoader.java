@@ -13,12 +13,9 @@ import play.vfs.VirtualFile;
 import play.exceptions.TemplateCompilationException;
 import play.exceptions.TemplateNotFoundException;
 
-/**
- * Load templates
- */
 public class TemplateLoader {
 
-    protected static Map<String, BaseTemplate> templates = new HashMap<String, BaseTemplate>();
+    protected static Map<String, BaseTemplate> templates = new HashMap<>();
     /**
      * See getUniqueNumberForTemplateFile() for more info
      */
@@ -64,8 +61,8 @@ public class TemplateLoader {
         }
 
         // Use default engine
-        final String fileRelativePath = file.relativePath();
-        final String key = getUniqueNumberForTemplateFile(fileRelativePath);
+        String fileRelativePath = file.relativePath();
+        String key = getUniqueNumberForTemplateFile(fileRelativePath);
         if (!templates.containsKey(key) || templates.get(key).compiledTemplate == null) {
             if (Play.usePrecompiled) {
                 BaseTemplate template = new GroovyTemplate(fileRelativePath.replaceAll("\\{(.*)\\}", "from_$1").replace(":", "_").replace("..", "parent"), "");
@@ -73,8 +70,8 @@ public class TemplateLoader {
                     template.loadPrecompiled();
                     templates.put(key, template);
                     return template;
-                } catch(Exception e) {
-                    Logger.warn("Precompiled template %s not found, trying to load it dynamically...", file.relativePath());
+                } catch (Exception e) {
+                    Logger.warn(e, "Precompiled template %s not found, trying to load it dynamically...", file.relativePath());
                 }
             }
             BaseTemplate template = new GroovyTemplate(fileRelativePath, file.contentAsString());
@@ -97,7 +94,7 @@ public class TemplateLoader {
 
     /**
      * Load a template from a String
-     * @param key A unique identifier for the template, used for retreiving a cached template
+     * @param key A unique identifier for the template, used for retrieving a cached template
      * @param source The template source
      * @return A Template
      */
@@ -124,7 +121,7 @@ public class TemplateLoader {
     /**
      * Clean the cache for that key
      * Then load a template from a String
-     * @param key A unique identifier for the template, used for retreiving a cached template
+     * @param key A unique identifier for the template, used for retrieving a cached template
      * @param source The template source
      * @return A Template
      */
@@ -207,7 +204,7 @@ public class TemplateLoader {
      * @return A list of executable templates
      */
     public static List<Template> getAllTemplate() {
-        List<Template> res = new ArrayList<Template>();
+        List<Template> res = new ArrayList<>();
         for (VirtualFile virtualFile : Play.templatesPath) {
             scan(res, virtualFile);
         }

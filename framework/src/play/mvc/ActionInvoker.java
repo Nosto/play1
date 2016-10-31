@@ -109,7 +109,7 @@ public class ActionInvoker {
         try {
 
             resolve(request, response);
-            final Method actionMethod = request.invokedMethod;
+            Method actionMethod = request.invokedMethod;
 
             // 1. Prepare request params
             Scope.Params.current().__mergeWith(request.routeArgs);
@@ -212,9 +212,7 @@ public class ActionInvoker {
 
                 throw new NoResult();
 
-            } catch (IllegalAccessException ex) {
-                throw ex;
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalAccessException | IllegalArgumentException ex) {
                 throw ex;
             } catch (InvocationTargetException ex) {
                 // It's a Result ? (expected)
@@ -230,7 +228,7 @@ public class ActionInvoker {
                     throw new JavaExecutionException(Play.classes.getApplicationClass(element.getClassName()), element.getLineNumber(),
                             ex.getTargetException());
                 }
-                throw new JavaExecutionException(Http.Request.current().action, ex);
+                throw new JavaExecutionException(ex);
             }
 
         } catch (Result result) {
@@ -282,6 +280,30 @@ public class ActionInvoker {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Find the first public method of a controller class
+     * 
+     * @param name
+     *            The method name
+     * @param clazz
+     *            The class
+     * @return The method or null
+     */
+    public static Method findActionMethod(String name, Class clazz) {
+        while (!clazz.getName().equals("java.lang.Object")) {
+            for (Method m : clazz.getDeclaredMethods()) {
+                if (m.getName().equalsIgnoreCase(name) && Modifier.isPublic(m.getModifiers())) {
+                    // Check that it is not an interceptor
+                    if (isActionMethod(m)) {
+                        return m;
+                    }
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return null;
     }
 
     private static void handleBefores(Http.Request request) throws Exception {
@@ -407,7 +429,7 @@ public class ActionInvoker {
                         // parameter
                         invokeControllerMethod(aFinally, new Object[] { caughtException });
                     } else {
-                        // invoce @Finally-method the regular way without
+                        // invoke @Finally-method the regular way without
                         // caughtException
                         invokeControllerMethod(aFinally, null);
                     }
@@ -419,7 +441,7 @@ public class ActionInvoker {
                 throw new JavaExecutionException(Play.classes.getApplicationClass(element.getClassName()), element.getLineNumber(),
                         ex.getTargetException());
             }
-            throw new JavaExecutionException(Http.Request.current().action, ex);
+            throw new JavaExecutionException(ex);
         } catch (Exception e) {
             throw new UnexpectedException("Exception while doing @Finally", e);
         }
@@ -536,7 +558,7 @@ public class ActionInvoker {
         StackRecorder pStackRecorder = new StackRecorder(continuation.stackRecorder);
         Object result = null;
 
-        final StackRecorder old = pStackRecorder.registerThread();
+        StackRecorder old = pStackRecorder.registerThread();
         try {
             pStackRecorder.isRestoring = !pStackRecorder.isEmpty();
 
@@ -593,7 +615,7 @@ public class ActionInvoker {
                             new Exception("class " + controller + " does not extend play.mvc.Controller"));
                 }
             }
-            actionMethod = Java.findActionMethod(action, controllerClass);
+            actionMethod = findActionMethod(action, controllerClass);
             if (actionMethod == null) {
                 throw new ActionNotFoundException(fullAction,
                         new Exception("No method public static void " + action + "() was found in class " + controller));
@@ -624,7 +646,7 @@ public class ActionInvoker {
         for (int i = 0; i < method.getParameterTypes().length; i++) {
 
             Class<?> type = method.getParameterTypes()[i];
-            Map<String, String[]> params = new HashMap<String, String[]>();
+            Map<String, String[]> params = new HashMap<>();
 
             // In case of simple params, we don't want to parse the body.
             if (type.equals(String.class) || Number.class.isAssignableFrom(type) || type.isPrimitive()) {

@@ -33,7 +33,7 @@ public class RenderBinary extends Result {
     /**
      * send a binary stream as the response
      * @param is the stream to read from
-     * @param name the name to use as Content-Diposition attachement filename
+     * @param name the name to use as Content-Disposition attachment filename
      */
     public RenderBinary(InputStream is, String name) {
         this(is, name, false);
@@ -46,7 +46,7 @@ public class RenderBinary extends Result {
     /**
      * send a binary stream as the response
      * @param is the stream to read from
-     * @param name the name to use as Content-Diposition attachement filename
+     * @param name the name to use as Content-Disposition attachment filename
      * @param inline true to set the response Content-Disposition to inline
      */
     public RenderBinary(InputStream is, String name, boolean inline) {
@@ -56,7 +56,7 @@ public class RenderBinary extends Result {
     /**
      * send a binary stream as the response
      * @param is the stream to read from
-     * @param name the name to use as Content-Diposition attachement filename
+     * @param name the name to use as Content-Disposition attachment filename
      * @param inline true to set the response Content-Disposition to inline
      */
     public RenderBinary(InputStream is, String name, String contentType, boolean inline) {
@@ -140,7 +140,7 @@ public class RenderBinary extends Result {
                         String contentDisposition = "%s; filename=\"%s\"";
                         response.setHeader("Content-Disposition", String.format(contentDisposition, dispositionType, name));
                     } else {
-                        final String encoding = getEncoding();
+                        String encoding = getEncoding();
                         String contentDisposition = "%1$s; filename*="+encoding+"''%2$s; filename=\"%2$s\"";
                         response.setHeader("Content-Disposition", String.format(contentDisposition, dispositionType, encoder.encode(name, encoding)));
                     }

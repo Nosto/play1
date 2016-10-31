@@ -1,13 +1,5 @@
 package play.mvc;
 
-import java.lang.annotation.Annotation;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import play.Logger;
 import play.Play;
 import play.data.binding.Binder;
@@ -15,13 +7,16 @@ import play.data.binding.ParamNode;
 import play.data.binding.RootParamNode;
 import play.data.parsing.DataParser;
 import play.data.parsing.DataParsers;
-import play.data.parsing.TextParser;
 import play.data.validation.Validation;
 import play.exceptions.UnexpectedException;
 import play.libs.Codec;
 import play.libs.Crypto;
 import play.libs.Time;
 import play.utils.Utils;
+
+import java.lang.annotation.Annotation;
+import java.net.URLEncoder;
+import java.util.*;
 
 /**
  * All application Scopes
@@ -39,8 +34,8 @@ public class Scope {
      */
     public static class Flash {
 
-        Map<String, String> data = new HashMap<String, String>();
-        Map<String, String> out = new HashMap<String, String>();
+        Map<String, String> data = new HashMap<>();
+        Map<String, String> out = new HashMap<>();
 
         public static Flash restore() {
             try {
@@ -73,7 +68,7 @@ public class Scope {
                 throw new UnexpectedException("Flash serializationProblem", e);
             }
         }        // ThreadLocal access
-        public static ThreadLocal<Flash> current = new ThreadLocal<Flash>();
+        public static final ThreadLocal<Flash> current = new ThreadLocal<>();
 
         public static Flash current() {
             return current.get();
@@ -162,8 +157,8 @@ public class Scope {
             try {
                 Session session = new Session();
                 Http.Cookie cookie = Http.Request.current().cookies.get(COOKIE_PREFIX + "_SESSION");
-				final int duration = Time.parseDuration(COOKIE_EXPIRE) ;
-				final long expiration = (duration * 1000l);
+				int duration = Time.parseDuration(COOKIE_EXPIRE) ;
+				long expiration = (duration * 1000l);
 
                 if (cookie != null && Play.started && cookie.value != null && !cookie.value.trim().equals("")) {
                     String value = cookie.value;
@@ -202,9 +197,9 @@ public class Scope {
                 throw new UnexpectedException("Corrupted HTTP session from " + Http.Request.current().remoteAddress, e);
             }
         }
-        Map<String, String> data = new HashMap<String, String>(); // ThreadLocal access
+        Map<String, String> data = new HashMap<>(); // ThreadLocal access
         boolean changed = false;
-        public static ThreadLocal<Session> current = new ThreadLocal<Session>();
+        public static final ThreadLocal<Session> current = new ThreadLocal<>();
 
         public static Session current() {
             return current.get();
@@ -278,8 +273,9 @@ public class Scope {
             change();
             if (value == null) {
                 put(key, (String) null);
+            } else {
+                put(key, value.toString());
             }
-            put(key, value + "");
         }
 
         public String get(String key) {
@@ -331,13 +327,13 @@ public class Scope {
     public static class Params {
         // ThreadLocal access
 
-        public static ThreadLocal<Params> current = new ThreadLocal<Params>();
+        public static final ThreadLocal<Params> current = new ThreadLocal<>();
 
         public static Params current() {
             return current.get();
         }
         boolean requestIsParsed;
-        public Map<String, String[]> data = new LinkedHashMap<String, String[]>();
+        public Map<String, String[]> data = new LinkedHashMap<>();
 
         boolean rootParamsNodeIsGenerated = false;
         private RootParamNode rootParamNode = null;
@@ -428,7 +424,8 @@ public class Scope {
                 checkAndParse();
                 // TODO: This is used by the test, but this is not the most convenient.
                 return (T) Binder.bind(getRootParamNode(), key, type, type, null);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
+                Logger.error(e, "Failed to get %s of type %s", key, type);
                 Validation.addError(key, "validation.invalid");
                 return null;
             }
@@ -439,6 +436,7 @@ public class Scope {
             try {
                 return (T) Binder.directBind(annotations, get(key), type, null);
             } catch (Exception e) {
+                Logger.error(e, "Failed to get %s of type %s", key, type);
                 Validation.addError(key, "validation.invalid");
                 return null;
             }
@@ -462,7 +460,7 @@ public class Scope {
 
         public Map<String, String[]> sub(String prefix) {
             checkAndParse();
-            Map<String, String[]> result = new LinkedHashMap<String, String[]>();
+            Map<String, String[]> result = new LinkedHashMap<>();
             for (String key : data.keySet()) {
                 if (key.startsWith(prefix + ".")) {
                     result.put(key.substring(prefix.length() + 1), data.get(key));
@@ -473,7 +471,7 @@ public class Scope {
 
         public Map<String, String> allSimple() {
             checkAndParse();
-            Map<String, String> result = new HashMap<String, String>();
+            Map<String, String> result = new HashMap<>();
             for (String key : data.keySet()) {
                 result.put(key, data.get(key)[0]);
             }
@@ -561,8 +559,8 @@ public class Scope {
      */
     public static class RenderArgs {
 
-        public Map<String, Object> data = new HashMap<String, Object>();        // ThreadLocal access
-        public static ThreadLocal<RenderArgs> current = new ThreadLocal<RenderArgs>();
+        public Map<String, Object> data = new HashMap<>();        // ThreadLocal access
+        public static final ThreadLocal<RenderArgs> current = new ThreadLocal<>();
 
         public static RenderArgs current() {
             return current.get();
@@ -592,8 +590,8 @@ public class Scope {
      */
     public static class RouteArgs {
 
-        public Map<String, Object> data = new HashMap<String, Object>();        // ThreadLocal access
-        public static ThreadLocal<RouteArgs> current = new ThreadLocal<RouteArgs>();
+        public Map<String, Object> data = new HashMap<>();        // ThreadLocal access
+        public static final ThreadLocal<RouteArgs> current = new ThreadLocal<>();
 
         public static RouteArgs current() {
             return current.get();

@@ -23,19 +23,15 @@ public class CalendarBinder implements TypeBinder<Calendar> {
             return null;
         }
         Calendar cal = Calendar.getInstance(Lang.getLocale());
-        try {
-            Date date = AnnotationHelper.getDateAs(annotations, value);
-            if (date != null) {
-                cal.setTime(date);
-            } else {
-                SimpleDateFormat sdf = new SimpleDateFormat(I18N.getDateFormat());
-                sdf.setLenient(false);
-                cal.setTime(sdf.parse(value));
-            }
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Cannot convert [" + value + "] to a Calendar: " + e.toString());
-        }
 
+        Date date = AnnotationHelper.getDateAs(annotations, value);
+        if (date != null) {
+            cal.setTime(date);
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat(I18N.getDateFormat());
+            sdf.setLenient(false);
+            cal.setTime(sdf.parse(value));
+        }
         return cal;
     }
 }

@@ -77,7 +77,7 @@ public class F {
             }
             return result;
         }
-        protected List<F.Action<Promise<V>>> callbacks = new ArrayList<F.Action<Promise<V>>>();
+        protected List<F.Action<Promise<V>>> callbacks = new ArrayList<>();
         protected boolean invoked = false;
         protected V result = null;
         protected Throwable exception = null;
@@ -118,7 +118,7 @@ public class F {
             }
         }
 
-        public static <T> Promise<List<T>> waitAll(final Promise<T>... promises) {
+        public static <T> Promise<List<T>> waitAll(Promise<T>... promises) {
             return waitAll(Arrays.asList(promises));
         }
 
@@ -156,7 +156,7 @@ public class F {
                 @Override
                 public List<T> get() throws InterruptedException, ExecutionException {
                     waitAllLock.await();
-                    List<T> r = new ArrayList<T>();
+                    List<T> r = new ArrayList<>();
                     for (Promise<T> f : promises) {
                         r.add(f.get());
                     }
@@ -172,7 +172,7 @@ public class F {
                     return get();
                 }
             };
-            final F.Action<Promise<T>> action = new F.Action<Promise<T>>() {
+            F.Action<Promise<T>> action = new F.Action<Promise<T>>() {
 
                 @Override
                 public void invoke(Promise<T> completed) {
@@ -196,8 +196,8 @@ public class F {
         }
 
         public static <A, B> Promise<F.Tuple<A, B>> wait2(Promise<A> tA, Promise<B> tB) {
-            final Promise<F.Tuple<A, B>> result = new Promise<F.Tuple<A, B>>();
-            final Promise<List<Object>> t = waitAll(new Promise[]{tA, tB});
+            final Promise<F.Tuple<A, B>> result = new Promise<>();
+            Promise<List<Object>> t = waitAll(new Promise[]{tA, tB});
             t.onRedeem(new F.Action<Promise<List<Object>>>() {
 
                 @Override
@@ -215,8 +215,8 @@ public class F {
         }
 
         public static <A, B, C> Promise<F.T3<A, B, C>> wait3(Promise<A> tA, Promise<B> tB, Promise<C> tC) {
-            final Promise<F.T3<A, B, C>> result = new Promise<F.T3<A, B, C>>();
-            final Promise<List<Object>> t = waitAll(new Promise[]{tA, tB, tC});
+            final Promise<F.T3<A, B, C>> result = new Promise<>();
+            Promise<List<Object>> t = waitAll(new Promise[]{tA, tB, tC});
             t.onRedeem(new F.Action<Promise<List<Object>>>() {
 
                 @Override
@@ -234,8 +234,8 @@ public class F {
         }
 
         public static <A, B, C, D> Promise<F.T4<A, B, C, D>> wait4(Promise<A> tA, Promise<B> tB, Promise<C> tC, Promise<D> tD) {
-            final Promise<F.T4<A, B, C, D>> result = new Promise<F.T4<A, B, C, D>>();
-            final Promise<List<Object>> t = waitAll(new Promise[]{tA, tB, tC, tD});
+            final Promise<F.T4<A, B, C, D>> result = new Promise<>();
+            Promise<List<Object>> t = waitAll(new Promise[]{tA, tB, tC, tD});
             t.onRedeem(new F.Action<Promise<List<Object>>>() {
 
                 @Override
@@ -253,8 +253,8 @@ public class F {
         }
 
         public static <A, B, C, D, E> Promise<F.T5<A, B, C, D, E>> wait5(Promise<A> tA, Promise<B> tB, Promise<C> tC, Promise<D> tD, Promise<E> tE) {
-            final Promise<F.T5<A, B, C, D, E>> result = new Promise<F.T5<A, B, C, D, E>>();
-            final Promise<List<Object>> t = waitAll(new Promise[]{tA, tB, tC, tD, tE});
+            final Promise<F.T5<A, B, C, D, E>> result = new Promise<>();
+            Promise<List<Object>> t = waitAll(new Promise[]{tA, tB, tC, tD, tE});
             t.onRedeem(new F.Action<Promise<List<Object>>>() {
 
                 @Override
@@ -271,8 +271,8 @@ public class F {
             return result;
         }
 
-        private static Promise<F.Tuple<Integer, Promise<Object>>> waitEitherInternal(final Promise<?>... futures) {
-            final Promise<F.Tuple<Integer, Promise<Object>>> result = new Promise<F.Tuple<Integer, Promise<Object>>>();
+        private static Promise<F.Tuple<Integer, Promise<Object>>> waitEitherInternal(Promise<?>... futures) {
+            final Promise<F.Tuple<Integer, Promise<Object>>> result = new Promise<>();
             for (int i = 0; i < futures.length; i++) {
                 final int index = i + 1;
                 ((Promise<Object>) futures[i]).onRedeem(new F.Action<Promise<Object>>() {
@@ -286,9 +286,9 @@ public class F {
             return result;
         }
 
-        public static <A, B> Promise<F.Either<A, B>> waitEither(final Promise<A> tA, final Promise<B> tB) {
-            final Promise<F.Either<A, B>> result = new Promise<F.Either<A, B>>();
-            final Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB);
+        public static <A, B> Promise<F.Either<A, B>> waitEither(Promise<A> tA, Promise<B> tB) {
+            final Promise<F.Either<A, B>> result = new Promise<>();
+            Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB);
 
             t.onRedeem(new F.Action<Promise<F.Tuple<Integer, Promise<Object>>>>() {
 
@@ -310,9 +310,9 @@ public class F {
             return result;
         }
 
-        public static <A, B, C> Promise<F.E3<A, B, C>> waitEither(final Promise<A> tA, final Promise<B> tB, final Promise<C> tC) {
-            final Promise<F.E3<A, B, C>> result = new Promise<F.E3<A, B, C>>();
-            final Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB, tC);
+        public static <A, B, C> Promise<F.E3<A, B, C>> waitEither(Promise<A> tA, Promise<B> tB, Promise<C> tC) {
+            final Promise<F.E3<A, B, C>> result = new Promise<>();
+            Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB, tC);
 
             t.onRedeem(new F.Action<Promise<F.Tuple<Integer, Promise<Object>>>>() {
 
@@ -337,9 +337,9 @@ public class F {
             return result;
         }
 
-        public static <A, B, C, D> Promise<F.E4<A, B, C, D>> waitEither(final Promise<A> tA, final Promise<B> tB, final Promise<C> tC, final Promise<D> tD) {
-            final Promise<F.E4<A, B, C, D>> result = new Promise<F.E4<A, B, C, D>>();
-            final Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB, tC, tD);
+        public static <A, B, C, D> Promise<F.E4<A, B, C, D>> waitEither(Promise<A> tA, Promise<B> tB, Promise<C> tC, Promise<D> tD) {
+            final Promise<F.E4<A, B, C, D>> result = new Promise<>();
+            Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB, tC, tD);
 
             t.onRedeem(new F.Action<Promise<F.Tuple<Integer, Promise<Object>>>>() {
 
@@ -367,9 +367,9 @@ public class F {
             return result;
         }
 
-        public static <A, B, C, D, E> Promise<F.E5<A, B, C, D, E>> waitEither(final Promise<A> tA, final Promise<B> tB, final Promise<C> tC, final Promise<D> tD, final Promise<E> tE) {
-            final Promise<F.E5<A, B, C, D, E>> result = new Promise<F.E5<A, B, C, D, E>>();
-            final Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB, tC, tD, tE);
+        public static <A, B, C, D, E> Promise<F.E5<A, B, C, D, E>> waitEither(Promise<A> tA, Promise<B> tB, Promise<C> tC, Promise<D> tD, Promise<E> tE) {
+            final Promise<F.E5<A, B, C, D, E>> result = new Promise<>();
+            Promise<F.Tuple<Integer, Promise<Object>>> t = waitEitherInternal(tA, tB, tC, tD, tE);
 
             t.onRedeem(new F.Action<Promise<F.Tuple<Integer, Promise<Object>>>>() {
 
@@ -401,10 +401,10 @@ public class F {
             return result;
         }
 
-        public static <T> Promise<T> waitAny(final Promise<T>... futures) {
-            final Promise<T> result = new Promise<T>();
+        public static <T> Promise<T> waitAny(Promise<T>... futures) {
+            final Promise<T> result = new Promise<>();
 
-            final F.Action<Promise<T>> action = new F.Action<Promise<T>>() {
+            F.Action<Promise<T>> action = new F.Action<Promise<T>>() {
 
                 @Override
                 public void invoke(Promise<T> completed) {
@@ -488,7 +488,7 @@ public class F {
     public static class EventStream<T> {
 
         final int bufferSize;
-        final ConcurrentLinkedQueue<T> events = new ConcurrentLinkedQueue<T>();
+        final ConcurrentLinkedQueue<T> events = new ConcurrentLinkedQueue<>();
         final List<Promise<T>> waiting = Collections.synchronizedList(new ArrayList<Promise<T>>());
 
         public EventStream() {
@@ -569,7 +569,7 @@ public class F {
 
         public BlockingEventStream(int maxBufferSize, ChannelHandlerContext ctx) {
         	this.ctx = ctx;
-        	events = new LinkedBlockingQueue<T>(maxBufferSize+10);
+        	events = new LinkedBlockingQueue<>(maxBufferSize + 10);
         }
 
         public synchronized Promise<T> nextEvent() {
@@ -586,7 +586,7 @@ public class F {
         //the socket reads completely(ie. stop reading from socket when queue is full) as in normal NIO operations if you stop reading
         //from the socket, the local nic buffer fills up, then the remote nic buffer fills(the client's nic), and so the client is informed
         //he can't write anymore just yet (or he blocks if he is synchronous).
-        //Then when someone pulls from the queue, the token would be set to enabled allowing to read from nic buffer again and it all propogates
+        //Then when someone pulls from the queue, the token would be set to enabled allowing to read from nic buffer again and it all propagates
         //This is normal flow control with NIO but since it is not done properly, this at least fixes the issue where websocket break down and
         //skip packets.  They no longer skip packets anymore.
         public void publish(T event) {
@@ -673,16 +673,16 @@ public class F {
     public static class ArchivedEventStream<T> {
 
         final int archiveSize;
-        final ConcurrentLinkedQueue<IndexedEvent<T>> events = new ConcurrentLinkedQueue<IndexedEvent<T>>();
+        final ConcurrentLinkedQueue<IndexedEvent<T>> events = new ConcurrentLinkedQueue<>();
         final List<FilterTask<T>> waiting = Collections.synchronizedList(new ArrayList<FilterTask<T>>());
-        final List<EventStream<T>> pipedStreams = new ArrayList<EventStream<T>>();
+        final List<EventStream<T>> pipedStreams = new ArrayList<>();
 
         public ArchivedEventStream(int archiveSize) {
             this.archiveSize = archiveSize;
         }
 
         public synchronized EventStream<T> eventStream() {
-            final EventStream<T> stream = new EventStream<T>(archiveSize);
+            EventStream<T> stream = new EventStream<>(archiveSize);
             for (IndexedEvent<T> event : events) {
                 stream.publish(event.data);
             }
@@ -691,14 +691,14 @@ public class F {
         }
 
         public synchronized Promise<List<IndexedEvent<T>>> nextEvents(long lastEventSeen) {
-            FilterTask<T> filter = new FilterTask<T>(lastEventSeen);
+            FilterTask<T> filter = new FilterTask<>(lastEventSeen);
             waiting.add(filter);
             notifyNewEvent();
             return filter;
         }
 
         public synchronized List<IndexedEvent> availableEvents(long lastEventSeen) {
-            List<IndexedEvent> result = new ArrayList<IndexedEvent>();
+            List<IndexedEvent> result = new ArrayList<>();
             for (IndexedEvent event : events) {
                 if (event.id > lastEventSeen) {
                     result.add(event);
@@ -708,7 +708,7 @@ public class F {
         }
 
         public List<T> archive() {
-            List<T> result = new ArrayList<T>();
+            List<T> result = new ArrayList<>();
             for (IndexedEvent<T> event : events) {
                 result.add(event.data);
             }
@@ -742,7 +742,7 @@ public class F {
         static class FilterTask<K> extends Promise<List<IndexedEvent<K>>> {
 
             final Long lastEventSeen;
-            final List<IndexedEvent<K>> newEvents = new ArrayList<IndexedEvent<K>>();
+            final List<IndexedEvent<K>> newEvents = new ArrayList<>();
 
             public FilterTask(Long lastEventSeen) {
                 this.lastEventSeen = lastEventSeen;
@@ -785,7 +785,7 @@ public class F {
         }
 
         public static <T> Some<T> Some(T value) {
-            return new Some<T>(value);
+            return new Some<>(value);
         }
     }
 
@@ -815,7 +815,7 @@ public class F {
             return "None";
         }
     }
-    public static None<Object> None = new None<Object>();
+    public static None<Object> None = new None<>();
 
     public static class Some<T> extends Option<T> {
 
@@ -1059,7 +1059,7 @@ public class F {
     }
 
     public static <A, B, C, D> T4<A, B, C, D> T4(A a, B b, C c, D d) {
-        return new T4<A, B, C, D>(a, b, c, d);
+        return new T4<>(a, b, c, d);
     }
 
     public static class T5<A, B, C, D, E> {
@@ -1085,7 +1085,7 @@ public class F {
     }
 
     public static <A, B, C, D, E> T5<A, B, C, D, E> T5(A a, B b, C c, D d, E e) {
-        return new T5<A, B, C, D, E>(a, b, c, d, e);
+        return new T5<>(a, b, c, d, e);
     }
 
     public static abstract class Matcher<T, R> {

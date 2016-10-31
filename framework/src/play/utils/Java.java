@@ -1,23 +1,6 @@
 package play.utils;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.FutureTask;
-
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.bytecode.SourceFileAttribute;
@@ -28,10 +11,7 @@ import play.data.binding.Binder;
 import play.data.binding.ParamNode;
 import play.data.binding.RootParamNode;
 import play.exceptions.UnexpectedException;
-import play.mvc.After;
-import play.mvc.Before;
-import play.mvc.Finally;
-import play.mvc.With;
+import play.mvc.*;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -42,8 +22,8 @@ import java.util.*;
 import java.util.concurrent.FutureTask;
 
 import static java.util.Collections.addAll;
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static java.util.Collections.sort;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
  * Java utils
@@ -112,28 +92,6 @@ public class Java {
             throw new RuntimeException(e);
         }
     }
-
-    /**
-     * Find the first public static method of a controller class
-     * @param name The method name
-     * @param clazz The class
-     * @return The method or null
-     */
-    public static Method findActionMethod(String name, Class clazz) {
-        while (!clazz.getName().equals("java.lang.Object")) {
-            for (Method m : clazz.getDeclaredMethods()) {
-                if (m.getName().equalsIgnoreCase(name) && Modifier.isPublic(m.getModifiers())) {
-                    // Check that it is not an interceptor
-                    if (!m.isAnnotationPresent(Before.class) && !m.isAnnotationPresent(After.class) && !m.isAnnotationPresent(Finally.class)) {
-                        return m;
-                    }
-                }
-            }
-            clazz = clazz.getSuperclass();
-        }
-        return null;
-    }
-
 
     /**
      * Invoke a static method
@@ -308,7 +266,7 @@ public class Java {
      * @return A list of method object
      */
     public static List<Method> findAllAnnotatedMethods(List<Class> classes, Class<? extends Annotation> annotationType) {
-        List<Method> methods = new ArrayList<Method>();
+        List<Method> methods = new ArrayList<>();
         for (Class clazz : classes) {
             methods.addAll(findAllAnnotatedMethods(clazz, annotationType));
         }
@@ -326,7 +284,7 @@ public class Java {
     }
 
     /** cache */
-    private static Map<Field, FieldWrapper> wrappers = new HashMap<Field, FieldWrapper>();
+    private static Map<Field, FieldWrapper> wrappers = new HashMap<>();
 
     public static FieldWrapper getFieldWrapper(Field field) {
         if (wrappers.get(field) == null) {
@@ -504,8 +462,8 @@ class JavaWithCaching {
     // cache follows..
 
     private final Object classAndAnnotationsLock = new Object();
-    private final Map<ClassAndAnnotation, List<Method>> classAndAnnotation2Methods = new HashMap<ClassAndAnnotation, List<Method>>();
-    private final Map<Class<?>, List<Method>> class2AllMethodsWithAnnotations = new HashMap<Class<?>, List<Method>>();
+    private final Map<ClassAndAnnotation, List<Method>> classAndAnnotation2Methods = new HashMap<>();
+    private final Map<Class<?>, List<Method>> class2AllMethodsWithAnnotations = new HashMap<>();
 
     /**
      * Find all annotated method from a class
@@ -513,10 +471,10 @@ class JavaWithCaching {
      * @param annotationType The annotation class
      * @return A list of method object
      */
-    public List<Method> findAllAnnotatedMethods(Class<?> clazz, final Class<? extends Annotation> annotationType) {
+    public List<Method> findAllAnnotatedMethods(Class<?> clazz, Class<? extends Annotation> annotationType) {
 
         if( clazz == null ) {
-            return new ArrayList<Method>(0);
+            return new ArrayList<>(0);
         }
 
         synchronized( classAndAnnotationsLock ) {
@@ -531,7 +489,7 @@ class JavaWithCaching {
                 return methods;
             }
             // have to resolve it.
-            methods = new ArrayList<Method>();
+            methods = new ArrayList<>();
 
             // get list of all annotated methods on this class..
             for( Method method : findAllAnnotatedMethods( clazz)) {
@@ -585,7 +543,7 @@ class JavaWithCaching {
                 return methods;
             }
             //have to resolve it..
-            methods = new ArrayList<Method>();
+            methods = new ArrayList<>();
             // Clazz can be null if we are looking at an interface / annotation
             while (clazz != null && !clazz.equals(Object.class)) {
                 for (Method method : clazz.getDeclaredMethods()) {

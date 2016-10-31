@@ -1,6 +1,7 @@
 package play.templates;
 
 import groovy.lang.Closure;
+import play.Logger;
 import play.Play;
 import play.exceptions.TemplateCompilationException;
 import play.templates.GroovyInlineTags.CALL;
@@ -15,12 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * The template compiler
- */
 public class GroovyTemplateCompiler extends TemplateCompiler {
 
-    protected List<String> extensionsClassnames = new ArrayList<String>();
+    protected List<String> extensionsClassnames = new ArrayList<>();
 
     // [#714] The groovy-compiler complaints if a line is more than 65535 unicode units long..
     // Have to split it if it is really that big
@@ -37,7 +35,7 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
                 extensionsClassnames.add(extensionsClass.getName());
             }
         } catch (Throwable e) {
-            //
+            Logger.error(e, "Failed to compile template %s", template.getName());
         }
         return super.compile(template);
     }
@@ -50,19 +48,24 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
         source = Play.pluginCollection.overrideTemplateSource(template, source);
         
         if(Boolean.parseBoolean(Play.configuration.getProperty("groovy.template.check.scala.comptatibility", "false"))){
-            source = this.checkScalaComptability(source);
+            source = this.checkScalaCompatibility(source);
         }
         
         return source;
     }
-    
+
+    @Deprecated
+    protected String checkScalaComptability(String source){
+        return checkScalaCompatibility(source);
+    }
+
     /**
      * Makes the code scala compatible (for the scala module).
      */
-    protected String checkScalaComptability(String source){  
+    protected String checkScalaCompatibility(String source){  
         // Static access
-        List<String> names = new ArrayList<String>();
-        Map<String, String> originalNames = new HashMap<String, String>();
+        List<String> names = new ArrayList<>();
+        Map<String, String> originalNames = new HashMap<>();
         for (Class clazz : Play.classloader.getAllClasses()) {
             if (clazz.getName().endsWith("$")) {
                 String name = clazz.getName().substring(0, clazz.getName().length() - 1).replace('$', '.') + '$';
@@ -92,14 +95,14 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
 
         if (!names.isEmpty()) {
 
-            if (names.size() <= 1 || source.indexOf("new ") >= 0) {
+            if (names.size() <= 1 || source.contains("new ")) {
                 for (String cName : names) { // dynamic class binding
                     source = source.replaceAll("new " + Pattern.quote(cName) + "(\\([^)]*\\))", "_('"
                             + originalNames.get(cName).replace("$", "\\$") + "').newInstance$1");
                 }
             }
 
-            if (names.size() <= 1 || source.indexOf("instanceof") >= 0) {
+            if (names.size() <= 1 || source.contains("instanceof")) {
                 for (String cName : names) { // dynamic class binding
                     source = source.replaceAll("([a-zA-Z0-9.-_$]+)\\s+instanceof\\s+" + Pattern.quote(cName), "_('"
                             + originalNames.get(cName).replace("$", "\\$") + "').isAssignableFrom($1.class)");
@@ -107,7 +110,7 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
                 }
             }
 
-            if (names.size() <= 1 || source.indexOf(".class") >= 0) {
+            if (names.size() <= 1 || source.contains(".class")) {
                 for (String cName : names) { // dynamic class binding
                     source = source.replaceAll("([^.])" + Pattern.quote(cName) + ".class",
                             "$1_('" + originalNames.get(cName).replace("$", "\\$") + "')");
@@ -204,7 +207,7 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
     @Override
     protected void script() {
         String text = parser.getToken();
-        if (text.indexOf("\n") > -1) {
+        if (text.contains("\n")) {
             String[] lines = parser.getToken().split("\n");
             for (int i = 0; i < lines.length; i++) {
                 print(lines[i]);
@@ -262,8 +265,8 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
     protected void startTag() {
         tagIndex++;
         String tagText = parser.getToken().trim().replaceAll("\r", "").replaceAll("\n", " ");
-        String tagName = "";
-        String tagArgs = "";
+        String tagName;
+        String tagArgs;
         boolean hasBody = !parser.checkNext().endsWith("/");
         if (tagText.indexOf(" ") > 0) {
             tagName = tagText.substring(0, tagText.indexOf(" "));
@@ -297,14 +300,14 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
         try {
             Method m = GroovyInlineTags.class.getDeclaredMethod("_" + tag.name, int.class, CALL.class);
             print("play.templates.TagContext.enterTag('" + tag.name + "');");
-            print((String) m.invoke(null, new Object[]{tagIndex, CALL.START}));
+            print((String) m.invoke(null, tagIndex, CALL.START));
             tag.hasBody = false;
             markLine(parser.getLine());
             println();
             skipLineBreak = true;
             return;
         } catch (Exception e) {
-            // do nothing here
+            Logger.debug(e, "Failed to start tag %s in template %s", tag.name, template.getName());
         }
         if (!tag.name.equals("doBody") && hasBody) {
             print("body" + tagIndex + " = {");
@@ -351,17 +354,14 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
             // Use inlineTag if exists
             try {
                 Method m = GroovyInlineTags.class.getDeclaredMethod("_" + tag.name, int.class, CALL.class);
-                println((String) m.invoke(null, new Object[]{tagIndex, CALL.END}));
+                println((String) m.invoke(null, tagIndex, CALL.END));
                 print("play.templates.TagContext.exitTag();");
             } catch (Exception e) {
                 // Use fastTag if exists
-                List<Class> fastClasses = new ArrayList<Class>();
-                try {
-                    fastClasses = Play.classloader.getAssignableClasses(FastTags.class);
-                } catch (Exception xe) {
-                    //
-                }
-                fastClasses.add(0, FastTags.class);
+                List<Class> fastClasses = new ArrayList<>();
+                fastClasses.add(FastTags.class);
+                fastClasses.addAll(Play.classloader.getAssignableClasses(FastTags.class));
+                
                 Method m = null;
                 String tName = tag.name;
                 String tSpace = "";
@@ -378,8 +378,9 @@ public class GroovyTemplateCompiler extends TemplateCompiler {
                     }
                     try {
                         m = c.getDeclaredMethod("_" + tName, Map.class, Closure.class, PrintWriter.class, GroovyTemplate.ExecutableTemplate.class, int.class);
+                        break;
                     } catch (NoSuchMethodException ex) {
-                        continue;
+                        // continue looking for this method in other *FastTags implementations
                     }
                 }
                 if (m != null) {
