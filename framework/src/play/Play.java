@@ -1,17 +1,5 @@
 package play;
 
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.LineNumberReader;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import play.cache.Cache;
 import play.classloading.ApplicationClasses;
 import play.classloading.ApplicationClassloader;
@@ -25,6 +13,14 @@ import play.plugins.PluginCollection;
 import play.templates.TemplateLoader;
 import play.utils.OrderSafeProperties;
 import play.vfs.VirtualFile;
+
+import java.io.*;
+import java.net.URI;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Main framework class
@@ -188,6 +184,9 @@ public class Play {
      * @param id   The framework id to use
      */
     public static void init(File root, String id) {
+        long start = System.currentTimeMillis();
+        Logger.info("Play initializing");
+
         // Simple things
         Play.id = id;
         Play.started = false;
@@ -318,6 +317,12 @@ public class Play {
         pluginCollection.onApplicationReady();
 
         Play.initialized = true;
+        long duration = (System.currentTimeMillis() - start) / 1000;
+        Logger.info("Play initialized (%s s)", duration);
+
+        if (mode != Mode.PROD) {
+            start();
+        }
     }
 
     public static void guessFrameworkPath() {
@@ -453,8 +458,9 @@ public class Play {
      * Recall to restart !
      */
     public static synchronized void start() {
+        long start = System.currentTimeMillis();
         try {
-
+            Logger.info(started ? "Play restarting" : "Play starting");
             if (started) {
                 stop();
             }
@@ -567,6 +573,8 @@ public class Play {
             try { Cache.stop(); } catch (Exception ignored) {}
             throw new UnexpectedException(e);
         }
+        long duration = (System.currentTimeMillis() - start) / 1000;
+        Logger.info("Play started (%s s)", duration);
     }
 
     /**
@@ -574,11 +582,14 @@ public class Play {
      */
     public static synchronized void stop() {
         if (started) {
+            long start = System.currentTimeMillis();
             Logger.trace("Stopping the play application");
             pluginCollection.onApplicationStop();
             started = false;
             Cache.stop();
             Router.lastLoading = 0L;
+            long duration = (System.currentTimeMillis() - start) / 1000;
+            Logger.info("Play stopped (%s s)", duration);
         }
     }
 

@@ -6,26 +6,20 @@ import com.google.gson.JsonPrimitive;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 import com.jamonapi.utils.Misc;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import play.Play.Mode;
 import play.classloading.ApplicationClasses.ApplicationClass;
-import play.classloading.enhancers.ContinuationEnhancer;
-import play.classloading.enhancers.ControllersEnhancer;
-import play.classloading.enhancers.Enhancer;
-import play.classloading.enhancers.LocalvariablesNamesEnhancer;
-import play.classloading.enhancers.MailerEnhancer;
-import play.classloading.enhancers.PropertiesEnhancer;
-import play.classloading.enhancers.SigEnhancer;
+import play.classloading.enhancers.*;
 import play.exceptions.UnexpectedException;
 import play.libs.Crypto;
 import play.mvc.Http.Header;
 import play.mvc.Http.Request;
 import play.mvc.Http.Response;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -292,21 +286,22 @@ public class CorePlugin extends PlayPlugin {
 
     @Override
     public void enhance(ApplicationClass applicationClass) throws Exception {
-        Class<?>[] enhancers = new Class[]{
-            PropertiesEnhancer.class,
-            ContinuationEnhancer.class,
-            SigEnhancer.class,
-            ControllersEnhancer.class,
-            MailerEnhancer.class,
-            LocalvariablesNamesEnhancer.class
-        };
-        for (Class<?> enhancer : enhancers) {
+        List<Enhancer> enhancers = new ArrayList<Enhancer>(4);
+        if (applicationClass.name.startsWith("controllers.")) {
+            enhancers.add(new SigEnhancer());
+            enhancers.add(new ContinuationEnhancer());
+            enhancers.add(new ControllersEnhancer());
+            if (applicationClass.name.endsWith("Mailer")) {
+                enhancers.add(new MailerEnhancer());
+            }
+            enhancers.add(new LocalvariablesNamesEnhancer());
+        } else if (applicationClass.name.endsWith("Mailer")) {
+            enhancers.add(new MailerEnhancer());
+            enhancers.add(new LocalvariablesNamesEnhancer());
+        }
+        for (Enhancer enhancer : enhancers) {
             try {
-                long start = System.currentTimeMillis();
-                ((Enhancer) enhancer.newInstance()).enhanceThisClass(applicationClass);
-                if (Logger.isTraceEnabled()) {
-                    Logger.trace("%sms to apply %s to %s", System.currentTimeMillis() - start, enhancer.getSimpleName(), applicationClass.name);
-                }
+                enhancer.enhanceThisClass(applicationClass);
             } catch (Exception e) {
                 throw new UnexpectedException("While applying " + enhancer + " on " + applicationClass.name, e);
             }

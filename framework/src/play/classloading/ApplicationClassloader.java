@@ -2,7 +2,6 @@ package play.classloading;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-
 import play.Logger;
 import play.Play;
 import play.cache.Cache;
@@ -12,7 +11,6 @@ import play.exceptions.UnexpectedException;
 import play.libs.IO;
 import play.vfs.VirtualFile;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +24,6 @@ import java.security.Permissions;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -329,9 +326,13 @@ public class ApplicationClassloader extends ClassLoader {
                 Play.classes.classes.remove(applicationClass.name);
                 currentState = new ApplicationClassloaderState();//show others that we have changed..
             } else {
-                int sigChecksum = applicationClass.sigChecksum;
-                applicationClass.enhance();
-                if (sigChecksum != applicationClass.sigChecksum) {
+                if (applicationClass.name.startsWith("controllers.")) {
+                    int sigChecksum = applicationClass.sigChecksum;
+                    applicationClass.enhance();
+                    if (sigChecksum != applicationClass.sigChecksum) {
+                        dirtySig = true;
+                    }
+                } else {
                     dirtySig = true;
                 }
                 BytecodeCache.cacheBytecode(applicationClass.enhancedByteCode, applicationClass.name, applicationClass.javaSource);
