@@ -2,7 +2,6 @@ package play.classloading;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-
 import play.Logger;
 import play.Play;
 import play.cache.Cache;
@@ -12,7 +11,6 @@ import play.exceptions.UnexpectedException;
 import play.libs.IO;
 import play.vfs.VirtualFile;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +24,6 @@ import java.security.Permissions;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -312,7 +309,8 @@ public class ApplicationClassloader extends ClassLoader {
         // Now check for file modification
         List<ApplicationClass> modifieds = new ArrayList<ApplicationClass>();
         for (ApplicationClass applicationClass : Play.classes.all()) {
-            if (applicationClass.timestamp < applicationClass.javaFile.lastModified()) {
+            if (applicationClass.timestamp < applicationClass.javaFile.lastModified()
+                    && applicationClass.name.startsWith("controllers.")) {
                 applicationClass.refresh();
                 modifieds.add(applicationClass);
             }
