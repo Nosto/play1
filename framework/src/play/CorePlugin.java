@@ -286,18 +286,24 @@ public class CorePlugin extends PlayPlugin {
 
     @Override
     public void enhance(ApplicationClass applicationClass) throws Exception {
+        List<Enhancer> enhancers = new ArrayList<Enhancer>(4);
         if (applicationClass.name.startsWith("controllers.")) {
-            List<Enhancer> enhancers = new ArrayList<Enhancer>(4);
             enhancers.add(new SigEnhancer());
             enhancers.add(new ContinuationEnhancer());
             enhancers.add(new ControllersEnhancer());
+            if (applicationClass.name.endsWith("Mailer")) {
+                enhancers.add(new MailerEnhancer());
+            }
             enhancers.add(new LocalvariablesNamesEnhancer());
-            for (Enhancer enhancer : enhancers) {
-                try {
-                    enhancer.enhanceThisClass(applicationClass);
-                } catch (Exception e) {
-                    throw new UnexpectedException("While applying " + enhancer + " on " + applicationClass.name, e);
-                }
+        } else if (applicationClass.name.endsWith("Mailer")) {
+            enhancers.add(new MailerEnhancer());
+            enhancers.add(new LocalvariablesNamesEnhancer());
+        }
+        for (Enhancer enhancer : enhancers) {
+            try {
+                enhancer.enhanceThisClass(applicationClass);
+            } catch (Exception e) {
+                throw new UnexpectedException("While applying " + enhancer + " on " + applicationClass.name, e);
             }
         }
     }
