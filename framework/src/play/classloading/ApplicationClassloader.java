@@ -309,8 +309,7 @@ public class ApplicationClassloader extends ClassLoader {
         // Now check for file modification
         List<ApplicationClass> modifieds = new ArrayList<ApplicationClass>();
         for (ApplicationClass applicationClass : Play.classes.all()) {
-            if (applicationClass.timestamp < applicationClass.javaFile.lastModified()
-                    && applicationClass.name.startsWith("controllers.")) {
+            if (applicationClass.timestamp < applicationClass.javaFile.lastModified()) {
                 applicationClass.refresh();
                 modifieds.add(applicationClass);
             }
@@ -327,9 +326,13 @@ public class ApplicationClassloader extends ClassLoader {
                 Play.classes.classes.remove(applicationClass.name);
                 currentState = new ApplicationClassloaderState();//show others that we have changed..
             } else {
-                int sigChecksum = applicationClass.sigChecksum;
-                applicationClass.enhance();
-                if (sigChecksum != applicationClass.sigChecksum) {
+                if (applicationClass.name.startsWith("controllers.")) {
+                    int sigChecksum = applicationClass.sigChecksum;
+                    applicationClass.enhance();
+                    if (sigChecksum != applicationClass.sigChecksum) {
+                        dirtySig = true;
+                    }
+                } else {
                     dirtySig = true;
                 }
                 BytecodeCache.cacheBytecode(applicationClass.enhancedByteCode, applicationClass.name, applicationClass.javaSource);
