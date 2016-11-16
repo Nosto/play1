@@ -319,10 +319,6 @@ public class Play {
         Play.initialized = true;
         long duration = (System.currentTimeMillis() - start) / 1000;
         Logger.info("Play initialized (%s s)", duration);
-
-        if (mode != Mode.PROD) {
-            start();
-        }
     }
 
     public static void guessFrameworkPath() {

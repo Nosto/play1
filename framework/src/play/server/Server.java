@@ -1,12 +1,5 @@
 package play.server;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Properties;
-import java.util.concurrent.Executors;
-
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelException;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
@@ -15,6 +8,13 @@ import play.Play;
 import play.Play.Mode;
 import play.libs.IO;
 import play.server.ssl.SslHttpServerPipelineFactory;
+
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.Properties;
+import java.util.concurrent.Executors;
 
 public class Server {
 
@@ -160,6 +160,9 @@ public class Server {
         Play.init(root, System.getProperty("play.id", ""));
         if (System.getProperty("precompile") == null) {
             new Server(args);
+            if (Play.mode.isDev() && !Play.runingInTestMode()) {
+                Play.start();
+            }
         } else {
             Logger.info("Done.");
         }
