@@ -1,5 +1,27 @@
 package play;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import play.cache.Cache;
 import play.classloading.ApplicationClasses;
 import play.classloading.ApplicationClassloader;
@@ -13,14 +35,6 @@ import play.plugins.PluginCollection;
 import play.templates.TemplateLoader;
 import play.utils.OrderSafeProperties;
 import play.vfs.VirtualFile;
-
-import java.io.*;
-import java.net.URI;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Main framework class
@@ -642,6 +656,9 @@ public class Play {
         if (mode == Mode.PROD) {
             return;
         }
+        if (runingInTestMode() && System.getProperty("play.autotest") != null) {
+            return;
+        }
         try {
             pluginCollection.beforeDetectingChanges();
             if(!pluginCollection.detectClassesChange()) {
@@ -850,7 +867,7 @@ public class Play {
      * @return true if testmode
      */
     public static boolean runingInTestMode(){
-        return id.matches("test|test-?.*");
+        return id.startsWith("test");
     }
     
 
