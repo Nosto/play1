@@ -729,7 +729,7 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
             // Log this, we can't call serve500()
             Throwable t = e.getCause();
             if (t instanceof TooLongFrameException) {
-                Logger.error(t, "Request exceeds 8192 bytes");
+                Logger.error(t, "Request exceeds 16384 bytes");
             }
             e.getChannel().close();
         } catch (Exception ex) {
