@@ -1248,7 +1248,7 @@ public class Controller implements ControllerSupport, LocalVariablesSupport {
                 }
 
                 if (haveSeenFirstApplicationClass) {
-                    if (className.startsWith("sun.") || className.startsWith("play.")) {
+                    if (shouldBeCheckedForEnhancement(className)) {
                         // we're back into the play framework code...
                         return; // done checking
                     } else {
@@ -1264,6 +1264,17 @@ public class Controller implements ControllerSupport, LocalVariablesSupport {
             }
 
         }
+    }
+
+
+    /**
+     * Checks if the classname is from the jdk, sun or play package and therefore should not be checked for enhancement
+     * @param String className
+     * @return boolean
+     */
+    static boolean shouldBeCheckedForEnhancement(String className)
+    {
+        return className.startsWith("jdk.") || className.startsWith("sun.") || className.startsWith("play.");
     }
 
     protected static <T> void await(Future<T> future, F.Action<T> callback) {
