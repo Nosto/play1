@@ -25,6 +25,7 @@ import play.Play;
 import play.classloading.ApplicationClassloaderState;
 import play.classloading.enhancers.LocalvariablesNamesEnhancer.LocalVariablesNamesTracer;
 import play.data.binding.Binder;
+import play.data.binding.Param;
 import play.data.binding.ParamNode;
 import play.data.binding.RootParamNode;
 import play.exceptions.UnexpectedException;
@@ -40,6 +41,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.FutureTask;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.addAll;
 import static org.apache.commons.io.IOUtils.closeQuietly;
@@ -237,7 +239,18 @@ public class Java {
      */
     public static String[] parameterNames(Method method) throws Exception {
         try {
-            return (String[]) method.getDeclaringClass().getDeclaredField("$" + method.getName() + LocalVariablesNamesTracer.computeMethodHash(method.getParameterTypes())).get(null);
+            return Arrays.stream(method.getParameterAnnotations()).map(annotations -> {
+                String name = "";
+
+                for (Annotation a: annotations) {
+                    if (Objects.equals(a.annotationType(), Param.class)) {
+                        Param param = (Param) a;
+                        name = param.value();
+                    }
+                }
+
+                return name;
+            }).collect(Collectors.toList()).toArray(new String[0]);
         } catch (Exception e) {
             throw new UnexpectedException("Cannot read parameter names for " + method, e);
         }

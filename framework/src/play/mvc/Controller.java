@@ -805,16 +805,9 @@ public class Controller implements ControllerSupport, LocalVariablesSupport {
      * @param args
      *            The template data
      */
+    @Deprecated
     protected static void renderTemplate(String templateName, Object... args) {
-        // Template datas
-        Map<String, Object> templateBinding = new HashMap<String, Object>(16);
-        for (Object o : args) {
-            List<String> names = LocalVariablesNamesTracer.getAllLocalVariableNames(o);
-            for (String name : names) {
-                templateBinding.put(name, o);
-            }
-        }
-        renderTemplate(templateName, templateBinding);
+        throw new RuntimeException("renderTemplate without parameter map is deprected. Fix your shit.");
     }
 
     /**
@@ -869,14 +862,9 @@ public class Controller implements ControllerSupport, LocalVariablesSupport {
      * @param args
      *            The template data
      */
+    @Deprecated
     protected static void render(Object... args) {
-        String templateName = null;
-        if (args.length > 0 && args[0] instanceof String && LocalVariablesNamesTracer.getAllLocalVariableNames(args[0]).isEmpty()) {
-            templateName = args[0].toString();
-        } else {
-            templateName = template();
-        }
-        renderTemplate(templateName, args);
+        throw new RuntimeException("render is deprecated. Fix your shit.");
     }
 
     /**
