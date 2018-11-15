@@ -1,6 +1,10 @@
 package play.libs;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.security.Key;
 import java.security.Provider;
 import java.security.interfaces.RSAPrivateKey;
@@ -45,8 +49,13 @@ import play.Logger;
 public class XML {
 
     public static DocumentBuilderFactory newDocumentBuilderFactory() {
+        return newDocumentBuilderFactory(false);
+    }
+
+    public static DocumentBuilderFactory newDocumentBuilderFactory(boolean namespaceAware) {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setNamespaceAware(namespaceAware);
             dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
             dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
             dbf.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
@@ -58,8 +67,12 @@ public class XML {
     }
 
     public static DocumentBuilder newDocumentBuilder() {
+        return newDocumentBuilder(false);
+    }
+
+    public static DocumentBuilder newDocumentBuilder(boolean namespaceAware) {
         try {
-            return newDocumentBuilderFactory().newDocumentBuilder();
+            return newDocumentBuilderFactory(namespaceAware).newDocumentBuilder();
         } catch (ParserConfigurationException e) {
             throw new RuntimeException(e);
         }
@@ -67,7 +80,9 @@ public class XML {
 
     /**
      * Serialize to XML String
-     * @param document The DOM document
+     * 
+     * @param document
+     *            The DOM document
      * @return The XML String
      */
     public static String serialize(Document document) {
@@ -79,20 +94,37 @@ public class XML {
             StreamResult streamResult = new StreamResult(writer);
             transformer.transform(domSource, streamResult);
         } catch (TransformerException e) {
-            throw new RuntimeException(
-                    "Error when serializing XML document.", e);
+            throw new RuntimeException("Error when serializing XML document.", e);
         }
         return writer.toString();
     }
 
     /**
      * Parse an XML file to DOM
+     *
+     * @param file
+     *            The XML file
      * @return null if an error occurs during parsing.
      *
      */
     public static Document getDocument(File file) {
+        return getDocument(file, false);
+    }
+
+    /**
+     * Parse an XML file to DOM
+     * 
+     * @param file
+     *            The XML file
+     * @param namespaceAware
+     *            whether to output XML namespace information in the returned document
+     *
+     * @return null if an error occurs during parsing.
+     *
+     */
+    public static Document getDocument(File file, boolean namespaceAware) {
         try {
-            return newDocumentBuilder().parse(file);
+            return newDocumentBuilder(namespaceAware).parse(file);
         } catch (SAXException e) {
             Logger.warn("Parsing error when building Document object from xml file '" + file + "'.", e);
         } catch (IOException e) {
@@ -103,12 +135,28 @@ public class XML {
 
     /**
      * Parse an XML string content to DOM
+     *
+     * @param xml
+     *            The XML string
      * @return null if an error occurs during parsing.
      */
     public static Document getDocument(String xml) {
+        return getDocument(xml, false);
+    }
+
+    /**
+     * Parse an XML string content to DOM
+     * 
+     * @param xml
+     *            The XML string
+     * @param namespaceAware
+     *            whether to output XML namespace information in the returned document
+     * @return null if an error occurs during parsing.
+     */
+    public static Document getDocument(String xml, boolean namespaceAware) {
         InputSource source = new InputSource(new StringReader(xml));
         try {
-            return newDocumentBuilder().parse(source);
+            return newDocumentBuilder(namespaceAware).parse(source);
         } catch (SAXException e) {
             Logger.warn("Parsing error when building Document object from xml data.", e);
         } catch (IOException e) {
@@ -119,11 +167,27 @@ public class XML {
 
     /**
      * Parse an XML coming from an input stream to DOM
+     *
+     * @param stream
+     *            The XML stream
      * @return null if an error occurs during parsing.
      */
     public static Document getDocument(InputStream stream) {
+        return getDocument(stream, false);
+    }
+
+    /**
+     * Parse an XML coming from an input stream to DOM
+     * 
+     * @param stream
+     *            The XML stream
+     * @param namespaceAware
+     *            whether to output XML namespace information in the returned document
+     * @return null if an error occurs during parsing.
+     */
+    public static Document getDocument(InputStream stream, boolean namespaceAware) {
         try {
-            return newDocumentBuilder().parse(stream);
+            return newDocumentBuilder(namespaceAware).parse(stream);
         } catch (SAXException e) {
             Logger.warn("Parsing error when building Document object from xml data.", e);
         } catch (IOException e) {
@@ -134,12 +198,15 @@ public class XML {
 
     /**
      * Check the xmldsig signature of the XML document.
-     * @param document the document to test
-     * @param publicKey the public key corresponding to the key pair the document was signed with
+     * 
+     * @param document
+     *            the document to test
+     * @param publicKey
+     *            the public key corresponding to the key pair the document was signed with
      * @return true if a correct signature is present, false otherwise
      */
     public static boolean validSignature(Document document, Key publicKey) {
-        Node signatureNode =  document.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature").item(0);
+        Node signatureNode = document.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature").item(0);
         KeySelector keySelector = KeySelector.singletonKeySelector(publicKey);
 
         try {
@@ -157,9 +224,13 @@ public class XML {
 
     /**
      * Sign the XML document using xmldsig.
-     * @param document the document to sign; it will be modified by the method.
-     * @param publicKey the public key from the key pair to sign the document.
-     * @param privateKey the private key from the key pair to sign the document.
+     * 
+     * @param document
+     *            the document to sign; it will be modified by the method.
+     * @param publicKey
+     *            the public key from the key pair to sign the document.
+     * @param privateKey
+     *            the private key from the key pair to sign the document.
      * @return the signed document for chaining.
      */
     public static Document sign(Document document, RSAPublicKey publicKey, RSAPrivateKey privateKey) {
@@ -167,16 +238,11 @@ public class XML {
         KeyInfoFactory keyInfoFactory = fac.getKeyInfoFactory();
 
         try {
-            Reference ref =fac.newReference(
-                    "",
-                    fac.newDigestMethod(DigestMethod.SHA1, null),
-                    Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
-                    null,
-                    null);
-            SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE,
-                                                                            (C14NMethodParameterSpec) null),
-                                              fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
-                                              Collections.singletonList(ref));
+            Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA1, null),
+                    Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)), null, null);
+            SignedInfo si = fac.newSignedInfo(
+                    fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),
+                    fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null), Collections.singletonList(ref));
             DOMSignContext dsc = new DOMSignContext(privateKey, document.getDocumentElement());
             KeyValue keyValue = keyInfoFactory.newKeyValue(publicKey);
             KeyInfo ki = keyInfoFactory.newKeyInfo(Collections.singletonList(keyValue));

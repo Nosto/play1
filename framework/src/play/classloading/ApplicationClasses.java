@@ -1,14 +1,5 @@
 package play.classloading;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import play.Logger;
-import play.Play;
-import play.PlayPlugin;
-import play.classloading.enhancers.Enhancer;
-import play.exceptions.UnexpectedException;
-import play.vfs.VirtualFile;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,6 +8,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javassist.ClassPool;
+import javassist.CtClass;
+import play.Logger;
+import play.Play;
+import play.PlayPlugin;
+import play.classloading.enhancers.Enhancer;
+import play.exceptions.UnexpectedException;
+import play.vfs.VirtualFile;
 
 /**
  * Application classes container.
@@ -30,18 +30,20 @@ public class ApplicationClasses {
     /**
      * Cache of all compiled classes
      */
-    Map<String, ApplicationClass> classes = new HashMap<String, ApplicationClass>();
+    Map<String, ApplicationClass> classes = new HashMap<>();
 
     /**
      * Clear the classes cache
      */
     public void clear() {
-        classes = new HashMap<String, ApplicationClass>();
+        classes = new HashMap<>();
     }
 
     /**
      * Get a class by name
-     * @param name The fully qualified class name
+     * 
+     * @param name
+     *            The fully qualified class name
      * @return The ApplicationClass or null
      */
     public ApplicationClass getApplicationClass(String name) {
@@ -56,13 +58,15 @@ public class ApplicationClasses {
 
     /**
      * Retrieve all application classes assignable to this class.
-     * @param clazz The superclass, or the interface.
+     * 
+     * @param clazz
+     *            The superclass, or the interface.
      * @return A list of application classes.
      */
     public List<ApplicationClass> getAssignableClasses(Class<?> clazz) {
-        List<ApplicationClass> results = new ArrayList<ApplicationClass>();
+        List<ApplicationClass> results = new ArrayList<>();
         if (clazz != null) {
-            for (ApplicationClass applicationClass : new ArrayList<ApplicationClass>(classes.values())) {
+            for (ApplicationClass applicationClass : new ArrayList<>(classes.values())) {
                 if (!applicationClass.isClass()) {
                     continue;
                 }
@@ -72,7 +76,8 @@ public class ApplicationClasses {
                     throw new UnexpectedException(ex);
                 }
                 try {
-                    if (clazz.isAssignableFrom(applicationClass.javaClass) && !applicationClass.javaClass.getName().equals(clazz.getName())) {
+                    if (clazz.isAssignableFrom(applicationClass.javaClass)
+                            && !applicationClass.javaClass.getName().equals(clazz.getName())) {
                         results.add(applicationClass);
                     }
                 } catch (Exception e) {
@@ -84,11 +89,13 @@ public class ApplicationClasses {
 
     /**
      * Retrieve all application classes with a specific annotation.
-     * @param clazz The annotation class.
+     * 
+     * @param clazz
+     *            The annotation class.
      * @return A list of application classes.
      */
     public List<ApplicationClass> getAnnotatedClasses(Class<? extends Annotation> clazz) {
-        List<ApplicationClass> results = new ArrayList<ApplicationClass>();
+        List<ApplicationClass> results = new ArrayList<>();
         for (ApplicationClass applicationClass : classes.values()) {
             if (!applicationClass.isClass()) {
                 continue;
@@ -107,14 +114,18 @@ public class ApplicationClasses {
 
     /**
      * All loaded classes.
+     * 
      * @return All loaded classes
      */
     public List<ApplicationClass> all() {
-        return new ArrayList<ApplicationClass>(classes.values());
+        return new ArrayList<>(classes.values());
     }
 
     /**
      * Put a new class to the cache.
+     * 
+     * @param applicationClass
+     *            The class to add
      */
     public void add(ApplicationClass applicationClass) {
         classes.put(applicationClass.name, applicationClass);
@@ -122,18 +133,30 @@ public class ApplicationClasses {
 
     /**
      * Remove a class from cache
+     * 
+     * @param applicationClass
+     *            The class to remove
      */
     public void remove(ApplicationClass applicationClass) {
         classes.remove(applicationClass.name);
     }
 
+    /**
+     * Remove a class from cache
+     * 
+     * @param applicationClass
+     *            The class name to remove
+     */
     public void remove(String applicationClass) {
         classes.remove(applicationClass);
     }
 
     /**
      * Does this class is already loaded ?
-     * @param name The fully qualified class name
+     * 
+     * @param name
+     *            The fully qualified class name
+     * @return true if the class is loaded
      */
     public boolean hasClass(String name) {
         return classes.containsKey(name);
@@ -216,6 +239,7 @@ public class ApplicationClasses {
 
         /**
          * Enhance this class
+         * 
          * @return the enhanced byteCode
          */
         public byte[] enhance() {
@@ -226,15 +250,16 @@ public class ApplicationClasses {
                 // PlayPlugins can be included as regular java files in a Play-application.
                 // If a PlayPlugin is present in the application, it is loaded when other plugins are loaded.
                 // All plugins must be loaded before we can start enhancing.
-                // This is a problem when loading PlayPlugins bundled as regular app-class since it uses the same classloader
-                // as the other (soon to be) enhanched play-app-classes.
+                // This is a problem when loading PlayPlugins bundled as regular app-class since it uses the same
+                // classloader
+                // as the other (soon to be) enhanced play-app-classes.
                 boolean shouldEnhance = true;
                 try {
                     CtClass ctClass = enhanceChecker_classPool.makeClass(new ByteArrayInputStream(this.enhancedByteCode));
                     if (ctClass.subclassOf(ctPlayPluginClass)) {
                         shouldEnhance = false;
                     }
-                } catch( Exception e) {
+                } catch (Exception e) {
                     // nop
                 }
 
@@ -247,15 +272,11 @@ public class ApplicationClasses {
                     // emit bytecode to standard class layout as well
                     File f = Play.getFile("precompiled/java/" + name.replace(".", "/") + ".class");
                     f.getParentFile().mkdirs();
-                    FileOutputStream fos = new FileOutputStream(f);
-                    try {
+                    try (FileOutputStream fos = new FileOutputStream(f)) {
                         fos.write(this.enhancedByteCode);
                     }
-                    finally {
-                        fos.close();
-                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.error(e, "Failed to write precompiled class %s to disk", name);
                 }
             }
             return this.enhancedByteCode;
@@ -264,6 +285,7 @@ public class ApplicationClasses {
 
         /**
          * Is this class already compiled but not defined ?
+         * 
          * @return if the class is compiled but not defined
          */
         public boolean isDefinable() {
@@ -274,9 +296,9 @@ public class ApplicationClasses {
             return isClass(this.name);
         }
 
-	public static boolean isClass(String name) {
+        public static boolean isClass(String name) {
             return !name.endsWith("package-info");
-	}
+        }
 
         public String getPackage() {
             int dot = name.lastIndexOf('.');
@@ -285,11 +307,12 @@ public class ApplicationClasses {
 
         /**
          * Compile the class from Java source
+         * 
          * @return the bytes that comprise the class file
          */
         public byte[] compile() {
             long start = System.currentTimeMillis();
-            Play.classes.compiler.compile(new String[]{this.name});
+            Play.classes.compiler.compile(new String[] { this.name });
 
             if (Logger.isTraceEnabled()) {
                 Logger.trace("%sms to compile class %s", System.currentTimeMillis() - start, name);
@@ -307,7 +330,9 @@ public class ApplicationClasses {
 
         /**
          * Call back when a class is compiled.
-         * @param code The bytecode.
+         * 
+         * @param code
+         *            The bytecode.
          */
         public void compiled(byte[] code) {
             javaByteCode = code;
@@ -324,9 +349,10 @@ public class ApplicationClasses {
 
     // ~~ Utils
     /**
-     * Retrieve the corresponding source file for a given class name.
-     * It handles innerClass too !
-     * @param name The fully qualified class name 
+     * Retrieve the corresponding source file for a given class name. It handles innerClass too !
+     * 
+     * @param name
+     *            The fully qualified class name
      * @return The virtualFile if found
      */
     public static VirtualFile getJava(String name) {
@@ -340,7 +366,7 @@ public class ApplicationClasses {
         for (VirtualFile path : Play.javaPath) {
             // 1. check if there is a folder (without extension)
             VirtualFile javaFile = path.child(fileOrDir);
-                  
+
             if (javaFile.exists() && javaFile.isDirectory() && javaFile.matchName(fileOrDir)) {
                 // we found a directory (package)
                 return null;

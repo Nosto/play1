@@ -11,6 +11,7 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StringType;
 import org.hibernate.usertype.UserType;
 
@@ -42,7 +43,7 @@ public class Blob implements BinaryField, UserType {
 
     @Override
     public InputStream get() {
-        if(exists()) {
+        if (exists()) {
             try {
                 return new FileInputStream(getFile());
             } catch(Exception e) {
@@ -85,8 +86,6 @@ public class Blob implements BinaryField, UserType {
         return UUID;
     }
 
-    //
-
     @Override
     public int[] sqlTypes() {
         return new int[] {Types.VARCHAR};
@@ -116,17 +115,17 @@ public class Blob implements BinaryField, UserType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet resultSet, String[] names, SessionImplementor sessionImplementor, Object o) throws HibernateException, SQLException {
-       String val = (String) StringType.INSTANCE.nullSafeGet(resultSet, names[0], sessionImplementor, o);
+    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
+        String val = (String) StringType.INSTANCE.nullSafeGet(rs, names[0], session, owner);
         return new Blob(val);
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement ps, Object o, int i, SessionImplementor sessionImplementor) throws HibernateException, SQLException {
-         if(o != null) {
-            ps.setString(i, encode((Blob) o));
+    public void nullSafeSet(PreparedStatement ps, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+        if (value != null) {
+            ps.setString(index, encode((Blob) value));
         } else {
-            ps.setNull(i, Types.VARCHAR);
+            ps.setNull(index, Types.VARCHAR);
         }
     }
 
@@ -164,21 +163,17 @@ public class Blob implements BinaryField, UserType {
         return original;
     }
 
-    //
-
     public static String getUUID(String dbValue) {
        return dbValue.split("[|]")[0];
     }
 
     public static File getStore() {
         String name = Play.configuration.getProperty("attachments.path", "attachments");
-        File store = null;
-        if(new File(name).isAbsolute()) {
-            store = new File(name);
-        } else {
+        File store = new File(name);
+        if (!store.isAbsolute()) {
             store = Play.getFile(name);
         }
-        if(!store.exists()) {
+        if (!store.exists()) {
             store.mkdirs();
         }
         return store;

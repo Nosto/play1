@@ -9,20 +9,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 import javax.sql.RowSet;
 import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetProvider;
 
 import org.hibernate.internal.SessionImpl;
 
-import com.sun.rowset.CachedRowSetImpl;
-
+import play.Logger;
 import play.db.jpa.JPA;
 import play.exceptions.DatabaseException;
-import play.Logger;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Database connection utilities.
@@ -31,9 +29,10 @@ public class DB {
 
     /**
      * The loaded datasource.
+     * 
      * @see ExtendedDatasource
      */
-    protected static final Map<String, ExtendedDatasource> datasources = new ConcurrentHashMap<String, ExtendedDatasource>();
+    protected static final Map<String, ExtendedDatasource> datasources = new ConcurrentHashMap<>();
 
     public static class ExtendedDatasource {
 
@@ -81,9 +80,9 @@ public class DB {
     @Deprecated
     public static String destroyMethod = "";
 
-    public final static String DEFAULT = "default";
+    public static final String DEFAULT = "default";
 
-    static ThreadLocal<Map<String, Connection>> localConnection = new ThreadLocal<Map<String, Connection>>();
+    static final ThreadLocal<Map<String, Connection>> localConnection = new ThreadLocal<>();
 
     public static DataSource getDataSource(String name) {
         if (datasources.get(name) != null) {
@@ -119,7 +118,7 @@ public class DB {
     private static void registerLocalConnection(String name, Connection connection) {
         Map<String, Connection> map = localConnection.get();
         if (map == null) {
-            map = new HashMap<String, Connection>();
+            map = new HashMap<>();
         }
         map.put(name, connection);
         localConnection.set(map);
@@ -131,7 +130,7 @@ public class DB {
     public static void closeAll() {
         Map<String, Connection> map = localConnection.get();
         if (map != null) {
-            Set<String> keySet = new HashSet<String>(map.keySet());
+            Set<String> keySet = new HashSet<>(map.keySet());
             for (String name : keySet) {
                 close(name);
             }
@@ -147,6 +146,9 @@ public class DB {
 
     /**
      * Close an given open connections for the current thread
+     * 
+     * @param name
+     *            Name of the DB
      */
     public static void close(String name) {
         Map<String, Connection> map = localConnection.get();
@@ -158,8 +160,7 @@ public class DB {
                 try {
                     connection.close();
                 } catch (Exception e) {
-                    throw new DatabaseException("It's possible than the connection '" + name
-                            + "'was not properly closed !", e);
+                    throw new DatabaseException("It's possible than the connection '" + name + "'was not properly closed !", e);
                 }
             }
         }
@@ -168,15 +169,17 @@ public class DB {
     /**
      * Open a connection for the current thread.
      * 
+     * @param name
+     *            Name of the DB
      * @return A valid SQL connection
      */
     public static Connection getConnection(String name) {
         try {
             if (JPA.isEnabled()) {
-                return ((SessionImpl) ((org.hibernate.ejb.EntityManagerImpl) JPA.em(name)).getSession()).connection();
+                return ((SessionImpl) ((org.hibernate.Session) JPA.em(name)).getSession()).connection();
             }
 
-            final Connection localConnection = getLocalConnection(name);
+            Connection localConnection = getLocalConnection(name);
             if (localConnection != null) {
                 return localConnection;
             }
@@ -202,10 +205,13 @@ public class DB {
 
     /**
      * Execute an SQL update
-     * 
+     *
+     * @param name
+     *            the DB name
      * @param SQL
-     * @return true if the next result is a ResultSet object; false if it is an
-     *         update count or there are no more results
+     *            the SQL statement
+     * @return true if the next result is a ResultSet object; false if it is an update count or there are no more
+     *         results
      */
     public static boolean execute(String name, String SQL) {
         Statement statement = null;
@@ -222,10 +228,25 @@ public class DB {
         return false;
     }
 
+    /**
+     * Execute an SQL update
+     *
+     * @param SQL
+     *            the SQL statement
+     * @return true if the next result is a ResultSet object; false if it is an update count or there are no more
+     *         results
+     */
     public static boolean execute(String SQL) {
         return execute(DEFAULT, SQL);
     }
 
+    /**
+     * Execute an SQL query
+     *
+     * @param SQL
+     *            the SQL statement
+     * @return The ResultSet object; false if it is an update count or there are no more results
+     */
     public static RowSet executeQuery(String SQL) {
         return executeQuery(DEFAULT, SQL);
     }
@@ -233,7 +254,10 @@ public class DB {
     /**
      * Execute an SQL query
      * 
+     * @param name
+     *            the DB name
      * @param SQL
+     *            the SQL statement
      * @return The rowSet of the query
      */
     public static RowSet executeQuery(String name, String SQL) {
@@ -248,7 +272,7 @@ public class DB {
             // Need to use a CachedRowSet that caches its rows in memory, which
             // makes it possible to operate without always being connected to
             // its data source
-            CachedRowSet rowset = new CachedRowSetImpl();
+            CachedRowSet rowset = RowSetProvider.newFactory().createCachedRowSet();
             rowset.populate(rs);
             return rowset;
         } catch (SQLException ex) {
@@ -281,13 +305,15 @@ public class DB {
 
     /**
      * Destroy the datasource
+     * 
+     * @param name
+     *            the DB name
      */
     public static void destroy(String name) {
         try {
             ExtendedDatasource extDatasource = datasources.get(name);
             if (extDatasource != null && extDatasource.getDestroyMethod() != null) {
-                Method close = extDatasource.datasource.getClass().getMethod(extDatasource.getDestroyMethod(),
-                        new Class[] {});
+                Method close = extDatasource.datasource.getClass().getMethod(extDatasource.getDestroyMethod(), new Class[] {});
                 if (close != null) {
                     close.invoke(extDatasource.getDataSource(), new Object[] {});
                     datasources.remove(name);
@@ -311,7 +337,7 @@ public class DB {
      * Destroy all datasources
      */
     public static void destroyAll() {
-        Set<String> keySet = new HashSet<String>(datasources.keySet());
+        Set<String> keySet = new HashSet<>(datasources.keySet());
         for (String name : keySet) {
             destroy(name);
         }

@@ -1,5 +1,28 @@
 package play.test;
 
+import com.ning.http.client.FluentCaseInsensitiveStringsMap;
+import com.ning.http.client.multipart.FilePart;
+import com.ning.http.client.multipart.MultipartBody;
+import com.ning.http.client.multipart.MultipartUtils;
+import com.ning.http.client.multipart.Part;
+import com.ning.http.client.multipart.StringPart;
+import org.apache.commons.lang.ArrayUtils;
+import org.junit.Before;
+import play.Invoker;
+import play.Invoker.InvocationContext;
+import play.classloading.enhancers.ControllersEnhancer.ControllerInstrumentation;
+import play.libs.F.Action;
+import play.exceptions.JavaExecutionException;
+import play.exceptions.UnexpectedException;
+import play.mvc.ActionInvoker;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Http.Request;
+import play.mvc.Http.Response;
+import play.mvc.Router.ActionDefinition;
+import play.mvc.Scope.RenderArgs;
+import play.mvc.results.RenderStatic;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
@@ -51,7 +76,7 @@ public abstract class FunctionalTest extends BaseTest {
     private static Map<String, Http.Cookie> savedCookies; // cookies stored
                                                           // between calls
 
-    private static Map<String, Object> renderArgs = new HashMap<String, Object>();
+    private static Map<String, Object> renderArgs = new HashMap<>();
 
     @Before
     public void clearCookies() {
@@ -78,7 +103,7 @@ public abstract class FunctionalTest extends BaseTest {
             Http.Header redirectedTo = response.headers.get("Location");
             String location = redirectedTo.value();
             if (location.contains("http")) {
-                java.net.URL redirectedUrl = null;
+                java.net.URL redirectedUrl;
                 try {
                     redirectedUrl = new java.net.URL(redirectedTo.value());
                 } catch (MalformedURLException e) {
@@ -93,15 +118,16 @@ public abstract class FunctionalTest extends BaseTest {
     }
 
     /**
-     * sends a GET request to the application under tests.
+     * Sends a GET request to the application under tests.
      * 
      * @param request
+     *            The given request
      * @param url
      *            relative url such as <em>"/products/1234"</em>
      * @return the response
      */
     public static Response GET(Request request, Object url) {
-        String path = "";
+        String path;
         String queryString = "";
         String turl = url.toString();
         if (turl.contains("?")) {
@@ -145,6 +171,7 @@ public abstract class FunctionalTest extends BaseTest {
      * Sends a POST request to the application under tests.
      * 
      * @param request
+     *            The given request
      * @param url
      *            relative url such as <em>"/products/1234"</em>
      * @param contenttype
@@ -154,7 +181,7 @@ public abstract class FunctionalTest extends BaseTest {
      * @return the response
      */
     public static Response POST(Request request, Object url, String contenttype, InputStream body) {
-        String path = "";
+        String path;
         String queryString = "";
         String turl = url.toString();
         if (turl.contains("?")) {
@@ -175,8 +202,7 @@ public abstract class FunctionalTest extends BaseTest {
     }
 
     /**
-     * Sends a POST request to the application under tests as a multipart form.
-     * Designed for file upload testing.
+     * Sends a POST request to the application under tests as a multipart form. Designed for file upload testing.
      * 
      * @param url
      *            relative url such as <em>"/products/1234"</em>
@@ -191,14 +217,14 @@ public abstract class FunctionalTest extends BaseTest {
     }
 
     public static Response POST(Object url, Map<String, String> parameters) {
-        return POST(newRequest(), url, parameters, new HashMap<String, File>());
+        return POST(newRequest(), url, parameters, new HashMap<>());
     }
 
     public static Response POST(Request request, Object url, Map<String, String> parameters, Map<String, File> files) {
-        List<Part> parts = new ArrayList<Part>();
+        List<Part> parts = new ArrayList<>();
 
         for (String key : parameters.keySet()) {
-            final StringPart stringPart = new StringPart(key, parameters.get(key), request.contentType, Charset.forName(request.encoding));
+            StringPart stringPart = new StringPart(key, parameters.get(key), request.contentType, Charset.forName(request.encoding));
             parts.add(stringPart);
         }
 
@@ -210,12 +236,11 @@ public abstract class FunctionalTest extends BaseTest {
             }
         }
 
-        MultipartBody requestEntity = null;
+        MultipartBody requestEntity;
         /*
-         * ^1 MultipartBody::read is not working (if parts.isEmpty() == true)
-         * byte[] array = null;
+         * ^1 MultipartBody::read is not working (if parts.isEmpty() == true) byte[] array = null;
          **/
-        _ByteArrayOutputStream baos = null;
+        _ByteArrayOutputStream baos;
         try {
             requestEntity = MultipartUtils.newMultipartBody(parts, new FluentCaseInsensitiveStringsMap());
             request.headers.putAll(ArrayUtils
@@ -233,7 +258,7 @@ public abstract class FunctionalTest extends BaseTest {
         }
         // InputStream body = new ByteArrayInputStream(array != null ? array :
         // new byte[0]); // ^1
-        InputStream body = new ByteArrayInputStream(baos != null ? baos.getByteArray() : new byte[0]);
+        InputStream body = new ByteArrayInputStream(baos.getByteArray());
         return POST(request, url, MULTIPART_FORM_DATA, body);
     }
 
@@ -245,6 +270,7 @@ public abstract class FunctionalTest extends BaseTest {
      * Sends a PUT request to the application under tests.
      * 
      * @param request
+     *            The given request
      * @param url
      *            relative url such as <em>"/products/1234"</em>
      * @param contenttype
@@ -254,7 +280,7 @@ public abstract class FunctionalTest extends BaseTest {
      * @return the response
      */
     public static Response PUT(Request request, Object url, String contenttype, String body) {
-        String path = "";
+        String path;
         String queryString = "";
         String turl = url.toString();
         if (turl.contains("?")) {
@@ -282,12 +308,13 @@ public abstract class FunctionalTest extends BaseTest {
      * Sends a DELETE request to the application under tests.
      * 
      * @param request
+     *            The given request
      * @param url
      *            relative url eg. <em>"/products/1234"</em>
      * @return the response
      */
     public static Response DELETE(Request request, Object url) {
-        String path = "";
+        String path;
         String queryString = "";
         String turl = url.toString();
         if (turl.contains("?")) {
@@ -308,10 +335,10 @@ public abstract class FunctionalTest extends BaseTest {
 
     public static void makeRequest(final Request request, final Response response) {
         final CountDownLatch actionCompleted = new CountDownLatch(1);
-        TestEngine.functionalTestsExecutor.submit(new Invoker.Invocation() {
+        final Future<?> invocationResult = TestEngine.functionalTestsExecutor.submit(new Invoker.Invocation() {
 
             @Override
-            public void execute() throws Exception {
+            public void execute() {
                 renderArgs.clear();
                 ActionInvoker.invoke(request, response);
 
@@ -330,7 +357,7 @@ public abstract class FunctionalTest extends BaseTest {
             }
 
             @Override
-            public void onException(final Throwable e) {
+            public void onException(Throwable e) {
                 try {
                     super.onException(e);
                 } finally {
@@ -344,18 +371,43 @@ public abstract class FunctionalTest extends BaseTest {
 
             @Override
             public InvocationContext getInvocationContext() {
-                ActionInvoker.resolve(request, response);
+                ActionInvoker.resolve(request);
                 return new InvocationContext(Http.invocationType, request.invokedMethod.getAnnotations(),
                         request.invokedMethod.getDeclaringClass().getAnnotations());
             }
 
         });
         try {
+            // We can not simply wait on the future result because of how continuations
+            // are implemented. Only when the latch is counted down the action is really
+            // completed. Therefore, wait on the latch.
             if (!actionCompleted.await(30, TimeUnit.SECONDS)) {
                 throw new TimeoutException("Request did not complete in time");
             }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        try {
+            // We still call this to raise any exception that might have
+            // occurred during execution of the invocation.
+            invocationResult.get();
+        }
+        catch (ExecutionException e) {
+            RuntimeException originalException = unwrapOriginalException(e);
+            if (originalException instanceof RenderStatic) {
+                response.status = 200;
+                response.direct = ((RenderStatic) originalException).file;
+            }
+            else {
+                throw originalException;
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        try {
             if (savedCookies == null) {
-                savedCookies = new HashMap<String, Http.Cookie>();
+                savedCookies = new HashMap<>();
             }
             for (Map.Entry<String, Http.Cookie> e : response.cookies.entrySet()) {
                 // If Max-Age is unset, browsers discard on exit; if
@@ -373,6 +425,22 @@ public abstract class FunctionalTest extends BaseTest {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /**
+     * Check if the original exceptions fits the usual patterns.
+     * If yes, return the very original runtime exception.
+     */
+    private static RuntimeException unwrapOriginalException(final ExecutionException e) {
+        Throwable executionCause = e.getCause();
+        if (executionCause instanceof JavaExecutionException || executionCause instanceof UnexpectedException) {
+            Throwable originalCause = executionCause.getCause();
+            if (originalCause instanceof RuntimeException) {
+                return (RuntimeException) originalCause;
+            }
+        }
+        // As a last fallback, just wrap everything up
+        return new RuntimeException(e);
     }
 
     public static Response makeRequest(final Request request) {
@@ -414,12 +482,33 @@ public abstract class FunctionalTest extends BaseTest {
     public static Response newResponse() {
         Response response = new Response();
         response.out = new ByteArrayOutputStream();
+
+        // Register an onWriteChunk action so that Response.writeChunk() won't throw
+        // an unhandled exception if the controller action calls it.
+        response.onWriteChunk(
+            chunk -> {
+                // Mimic the behavior of PlayHandler$LazyChunkedInput.writeChunk()
+                if (chunk != null) {
+                    try {
+                        byte[] bytes;
+                        if (chunk instanceof byte[]) {
+                            bytes = (byte[]) chunk;
+                        } else {
+                            bytes = chunk.toString().getBytes(response.encoding);
+                        }
+                        response.out.write(bytes);
+                    } catch (Exception exception) {
+                        // Something is wrong with the chunk.
+                        throw new RuntimeException(exception);
+                    }
+                }
+            });
+
         return response;
     }
 
     public static Request newRequest() {
-        Request request = Request.createRequest(null, "GET", "/", "", null, null, null, null, false, 80, "localhost", false, null, null);
-        return request;
+        return Request.createRequest(null, "GET", "/", "", null, null, null, null, false, 80, "localhost", false, null, null);
     }
 
     // Assertions
@@ -455,6 +544,13 @@ public abstract class FunctionalTest extends BaseTest {
         assertEquals("Response status ", (Object) status, response.status);
     }
 
+    public static void assertIsStaticFile(Response response, String filePath) {
+        assertIsOk(response);
+
+        String file = (String) response.direct;
+        assertEquals(filePath, file);
+    }
+
     /**
      * Exact equality assertion on response body
      * 
@@ -471,8 +567,7 @@ public abstract class FunctionalTest extends BaseTest {
      * Asserts response body matched a pattern or contains some text.
      * 
      * @param pattern
-     *            a regular expression pattern or a regular text, ( which must
-     *            be escaped using Pattern.quote)
+     *            a regular expression pattern or a regular text, ( which must be escaped using Pattern.quote)
      * @param response
      *            server response
      */
@@ -483,9 +578,8 @@ public abstract class FunctionalTest extends BaseTest {
     }
 
     /**
-     * Verify response charset encoding, as returned by the server in the
-     * Content-Type header. Be aware that if no charset is returned, assertion
-     * will fail.
+     * Verify response charset encoding, as returned by the server in the Content-Type header. Be aware that if no
+     * charset is returned, assertion will fail.
      * 
      * @param charset
      *            expected charset encoding such as "utf-8" or "iso8859-1".
@@ -502,8 +596,7 @@ public abstract class FunctionalTest extends BaseTest {
      * Verify the response content-type
      * 
      * @param contentType
-     *            expected content-type without any charset extension, such as
-     *            "text/html"
+     *            expected content-type without any charset extension, such as "text/html"
      * @param response
      *            server response
      */

@@ -75,11 +75,17 @@ public class PlayJUnitRunner extends BlockJUnit4ClassRunner implements Filterabl
     }
 
     @Override
-    public void run(final RunNotifier notifier) {
-	initTest();
-	super.run(notifier);
+    public void run(RunNotifier notifier) {
+        initTest();
+        jUnit4.run(notifier);
     }
-    
+
+    @Override
+    public void filter(Filter toFilter) throws NoTestsRemainException {
+        jUnit4.filter(toFilter);
+
+    }
+
     // *********************
     public enum StartPlay implements MethodRule {
 
