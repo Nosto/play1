@@ -203,8 +203,10 @@ public class PropertiesEnhancer extends Enhancer {
         if (ctField.getName().equals(ctField.getName().toUpperCase()) || ctField.getName().substring(0, 1).equals(ctField.getName().substring(0, 1).toUpperCase())) {
             return false;
         }
+        final int classModifiers = ctField.getDeclaringClass().getModifiers();
         return Modifier.isPublic(ctField.getModifiers())
                 && !Modifier.isStatic(ctField.getModifiers());
+                && (Modifier.isPublic(classModifiers) || Modifier.isProtected(classModifiers));
     }
 
     /**
