@@ -32,7 +32,7 @@ require:    &allDependencies
     - javax.activation -> activation 1.1.1
     - javax.mail -> mail 1.4.7
     - javax.inject 1.0
-    - javax.validation -> validation-api 1.1.0.Final
+    - javax.validation -> validation-api 2.0.1.Final
     - jaxen 1.1.6
     - joda-time 2.10
     - org.hamcrest -> hamcrest-all 1.3
@@ -41,7 +41,7 @@ require:    &allDependencies
     - net.sf.ehcache -> ehcache 2.10.6
     - net.sf.ezmorph -> ezmorph 1.0.6
     - net.sf.jsr107cache -> jsr107cache 1.1
-    - net.sf.oval -> oval 1.86
+    - net.sf.oval -> oval 1.90
     - mysql -> mysql-connector-java 5.1.46
     - oauth.signpost -> signpost-core 1.2.1.2
     - org.apache.geronimo.specs -> geronimo-servlet_2.5_spec 1.2
