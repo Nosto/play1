@@ -119,7 +119,7 @@ public final class PlayServerCookieEncoder extends CookieEncoder {
         if (cookie instanceof SameSiteCookie) {
             SameSiteCookie sameSiteCookie = (SameSiteCookie) cookie;
             if (sameSiteCookie.sameSite() != null) {
-                CookieUtil.add(buf, "Same-Site", sameSiteCookie.sameSite());
+                CookieUtil.add(buf, "SameSite", sameSiteCookie.sameSite());
             }
         }
 
