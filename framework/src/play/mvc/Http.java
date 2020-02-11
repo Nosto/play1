@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -163,6 +162,10 @@ public class Http {
          * See http://www.owasp.org/index.php/HttpOnly
          */
         public boolean httpOnly = false;
+        /**
+         * See https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00
+         */
+        public String sameSite;
     }
 
     /**
