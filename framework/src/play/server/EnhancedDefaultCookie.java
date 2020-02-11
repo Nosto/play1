@@ -240,6 +240,10 @@ public class EnhancedDefaultCookie implements Cookie, SameSiteCookie {
         if (isHttpOnly()) {
             buf.append(", HTTPOnly");
         }
+        if (sameSite() != null) {
+            buf.append(", Same-Site=")
+               .append(sameSite());
+        }
         return buf.toString();
     }
 
