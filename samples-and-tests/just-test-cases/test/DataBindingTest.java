@@ -44,7 +44,7 @@ public class DataBindingTest extends FunctionalTest {
 	params.put("entity.yop", "yop");
         Response response = POST(Router.reverse("DataBinding.editAnEntity").url, params);
         assertIsOk(response);
-        assertContentMatch("2013-10-03 11:33:05:125 AM", response);
+        assertContentMatch("2013-10-03 11:33:05:125 (AM|am)", response);
         assertContentMatch("--yop--", response);
     }
 

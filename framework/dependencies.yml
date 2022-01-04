@@ -69,7 +69,6 @@ require:    &allDependencies
     - io.netty -> netty 3.10.6.Final
     - org.postgresql -> postgresql 42.3.1
     - org.slf4j -> slf4j-api 1.7.32
-    - org.slf4j -> slf4j-log4j12 1.7.32
     - org.yaml -> snakeyaml 1.30
     - net.spy -> spymemcached 2.12.3
     - com.thoughtworks.xstream -> xstream 1.4.18
@@ -78,7 +77,6 @@ require:    &allDependencies
     - org.apache.logging.log4j -> log4j-api 2.17.0
     - org.apache.logging.log4j -> log4j-slf4j-impl 2.17.0
     - org.apache.logging.log4j -> log4j-web 2.17.0
-    - org.slf4j -> slf4j-api 1.7.24
 
 # Default repositories, used for all projects
 repositories:
