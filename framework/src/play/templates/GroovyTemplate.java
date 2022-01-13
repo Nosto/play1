@@ -404,6 +404,11 @@ public class GroovyTemplate extends BaseTemplate {
 
         @Override
         public Object getProperty(String property) {
+            if(property == null || property.isEmpty()) {
+                // Groovy throws java.lang.StringIndexOutOfBoundsException: String index out of range: 0
+                // while searching for the property in MetaClass
+                return null;
+            }
             try {
                 if (property.equals("actionBridge")) {
                     return new ActionBridge(this);
