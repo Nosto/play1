@@ -499,7 +499,7 @@ class IamADeveloper(unittest.TestCase):
 
         # Let's code hello world
         step('Let\'s code hello world')
-    
+
         self.play = callPlay(self, ['run', app])
         self.assert_(waitFor(self.play, 'Listening for HTTP on port 9000'))
         
@@ -530,10 +530,10 @@ class IamADeveloper(unittest.TestCase):
         time.sleep(1)
         
         edit(app, 'app/views/Application/index.html', 4, "Hello ${name !!")
-    
+
         self.play = callPlay(self, ['run', app])
         self.assert_(waitFor(self.play, 'Listening for HTTP on port 9000'))
-        
+
 
         try:
             response = browser.reload()
@@ -543,9 +543,9 @@ class IamADeveloper(unittest.TestCase):
             self.assert_(browser.title() == 'Application error')
             html = ''.join(error.readlines()) 
             self.assert_(html.count('Template compilation error'))
-            self.assert_(html.count('In /app/views/Application/index.html (around line 4)'))
-            self.assert_(waitFor(self.play, 'ERROR'))
-            self.assert_(waitFor(self.play, 'Template compilation error (In /app/views/Application/index.html around line 4)'))
+            self.assert_(html.count('The template <strong>/app/views/Application/index.html</strong> does not compile : <strong>Unexpected input: \'{\' </strong>'))
+            self.assert_(waitFor(self.play, 'ERROR ~'))
+            self.assert_(waitFor(self.play, 'Template compilation error (In /app/views/Application/index.html around line 0)'))
             self.assert_(waitFor(self.play, 'at Invocation.HTTP Request(Play!)'))
         
         # Refresh again
@@ -559,9 +559,9 @@ class IamADeveloper(unittest.TestCase):
             self.assert_(browser.title() == 'Application error')
             html = ''.join(error.readlines()) 
             self.assert_(html.count('Template compilation error'))
-            self.assert_(html.count('In /app/views/Application/index.html (around line 4)'))
-            self.assert_(waitFor(self.play, 'ERROR'))
-            self.assert_(waitFor(self.play, 'Template compilation error (In /app/views/Application/index.html around line 4)'))
+            self.assert_(html.count('The template <strong>/app/views/Application/index.html</strong> does not compile : <strong>Unexpected input: \'{\' </strong>'))
+            self.assert_(waitFor(self.play, 'ERROR ~'))
+            self.assert_(waitFor(self.play, 'Template compilation error (In /app/views/Application/index.html around line 0)'))
             self.assert_(waitFor(self.play, 'at Invocation.HTTP Request(Play!)'))
             
         # Try a template runtime exception  
@@ -621,7 +621,7 @@ class IamADeveloper(unittest.TestCase):
         killPlay()
         self.play.wait()
 
-    
+
 
         # Make a Java runtime exception
         step('Make a Java runtime exception')  
@@ -747,7 +747,7 @@ class IamADeveloper(unittest.TestCase):
 
         # Correct the routes file
         step('Correct the routes file')
-        
+
 
         edit(app, 'conf/routes', 7, "GET      /hello          Hello2.hello")
 
@@ -777,10 +777,10 @@ class IamADeveloper(unittest.TestCase):
         rename(app, 'app/controllers/Hello2.java', 'app/controllers/Hello3.java')
         edit(app, 'conf/routes', 7, "GET      /hello          Hello3.hello")
         edit(app, 'app/controllers/Hello3.java', 3, "public class Hello3 extends Application {")
-    
+
         #self.play = callPlay(self, ['run', app])
         #self.assert_(waitFor(self.play, 'Listening for HTTP on port 9000'))
-        
+
         browser.reload()
         self.assert_(not browser.viewing_html())   
         html = response.get_data()
