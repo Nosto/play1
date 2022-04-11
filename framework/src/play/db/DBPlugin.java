@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang.StringUtils;
 
 import jregex.Matcher;
+import org.apache.log4j.Level;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
