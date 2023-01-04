@@ -50,7 +50,7 @@ require:    &allDependencies
     - org.apache.ivy -> ivy 2.5.1
     - org.bouncycastle -> bcprov-jdk18on 1.72
     - org.bouncycastle -> bcpkix-jdk18on 1.72
-    - org.bouncycastle -> bcutil-jdk18on 1.71.1
+    - org.bouncycastle -> bcutil-jdk18on 1.72
     - org.codehaus.groovy -> groovy 3.0.13
     - org.codehaus.groovy -> groovy-xml 3.0.13
     - org.eclipse.jdt -> org.eclipse.jdt.core 3.32.0
