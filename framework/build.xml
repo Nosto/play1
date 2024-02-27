@@ -282,6 +282,15 @@
             <param name="play.user.country" value="-Duser.country=US"/>
             <param name="play.enhancement" value="-DenableAllEnhancers=true" />
         </antcall>
+        <if>
+        <available file="${basedir}/../samples-and-tests/just-test-cases/test-result/continuations.test.html.failed.html"/>
+        <then>
+        <loadfile property="content" srcfile="${basedir}/../samples-and-tests/just-test-cases/test-result/continuations.test.html.failed.html"/>
+        <echo message="========================================================"></echo>
+        <echo message="${content}" />
+        <echo message="========================================================"></echo>
+        </then>
+        </if>
 
         <antcall target="play-test">
             <param name="testAppPath" value="${basedir}/../samples-and-tests/forum"/>

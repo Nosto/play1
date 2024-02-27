@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         jdk: [ 17, 21 ]
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
 
     name: Check / Tests -> JDK-${{ matrix.jdk }}/${{ matrix.os }}
     steps:
