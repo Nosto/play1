@@ -1,0 +1,105 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven {
+            url "https://repo.nos.to/content/repositories/central/"
+            credentials {
+                username = "$mavenUser"
+                password = "$mavenPassword"
+            }
+        }
+    }
+    dependencies {
+        classpath group: 'org.yaml', name: 'snakeyaml', version: '2.2'
+    }
+}
+
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'com.nosto.play'
+// 'playframework'
+version '1.7.1-nosto-GA5-SNAPSHOT'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['test-src']
+        }
+
+    }
+}
+
+
+def deps = new org.yaml.snakeyaml.Yaml().load(file("dependencies.yml").text)
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId project.name
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url 'https://repo.nos.to/content/repositories/NostoDependencies/'
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+        }
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url "https://repo.nos.to/content/repositories/central/"
+        credentials {
+            username = "$mavenUser"
+            password = "$mavenPassword"
+        }
+    }
+}
+
+
+
+
+task testMe( ){
+
+    doLast {
+        println deps.require.collect {
+            def lv = it.split(" ");
+            def version = lv[lv.size()-1]
+            def lib = it.substring(0, it.length() - version.length()).split("->")
+            def group = lib[0].trim()
+            def name = lib.size()>1 ? lib[1].trim() : group
+            return "compile group: '$group', name: '$name', version: '${version.trim()}'" }
+    }
+}
+
+dependencies {
+    deps.require.each {
+        def lv = it.split(" ");
+        def version = lv[lv.size()-1]
+        def lib = it.substring(0, it.length() - version.length()).split("->")
+        def group = lib[0]
+        def name = lib.size()>1 ? lib[1] : group
+        implementation(group: group.trim(), name: name.trim(), version: version.trim(), {
+            transitive = false
+        })
+    }
+    compileOnly(group: 'org.apache.ant', name: 'ant', version: '1.10.5')
+    compileOnly(group: 'org.apache.ant', name: 'ant-junit', version: '1.10.5')
+    compileOnly group: 'com.google.code.maven-play-plugin.org.playframework', name: 'jj-simplecaptcha', version: '1.1'
+
+}
+

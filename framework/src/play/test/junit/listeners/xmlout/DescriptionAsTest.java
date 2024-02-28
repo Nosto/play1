@@ -1,6 +1,6 @@
 package play.test.junit.listeners.xmlout;
 
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitResultFormatter;
+//import org.apache.tools.ant.taskdefs.optional.junit.JUnitResultFormatter;
 import org.junit.runner.Description;
 
 import junit.framework.Test;
