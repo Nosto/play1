@@ -34,6 +34,7 @@ require:    &allDependencies
     - com.sun.mail -> javax.mail 1.6.2
     - jakarta.inject -> jakarta.inject-api 1.0
     - javax.validation -> validation-api 1.1.0.Final
+    - javax.activation -> activation 1.1.1
     - jaxen 2.0.0
     - joda-time 2.12.5
     - org.hamcrest -> hamcrest-all 1.3

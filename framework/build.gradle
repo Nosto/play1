@@ -1,3 +1,5 @@
+import org.yaml.snakeyaml.Yaml
+
 buildscript {
     repositories {
         mavenLocal()
@@ -14,14 +16,12 @@ buildscript {
     }
 }
 
-
 plugins {
     id 'java'
     id 'maven-publish'
 }
 
 group 'com.nosto.play'
-// 'playframework'
 version '1.7.1-nosto-GA5-SNAPSHOT'
 
 sourceSets {
@@ -29,17 +29,23 @@ sourceSets {
         java {
             srcDirs = ['src']
         }
+        resources {
+            srcDirs = ['src']
+        }
     }
     test {
         java {
             srcDirs = ['test-src']
         }
+        resources {
+            srcDirs = ['test-src']
+        }
 
+        output.resourcesDir = "build/classes/java/test"
     }
 }
 
-
-def deps = new org.yaml.snakeyaml.Yaml().load(file("dependencies.yml").text)
+def deps = new Yaml().load(file("dependencies.yml").text)
 
 publishing {
     publications {
@@ -70,36 +76,31 @@ repositories {
     }
 }
 
-
-
-
-task testMe( ){
-
-    doLast {
-        println deps.require.collect {
-            def lv = it.split(" ");
-            def version = lv[lv.size()-1]
-            def lib = it.substring(0, it.length() - version.length()).split("->")
-            def group = lib[0].trim()
-            def name = lib.size()>1 ? lib[1].trim() : group
-            return "compile group: '$group', name: '$name', version: '${version.trim()}'" }
-    }
-}
-
 dependencies {
     deps.require.each {
-        def lv = it.split(" ");
-        def version = lv[lv.size()-1]
+        def lv = it.split(" ")
+        def version = lv[lv.size() - 1]
         def lib = it.substring(0, it.length() - version.length()).split("->")
         def group = lib[0]
-        def name = lib.size()>1 ? lib[1] : group
+        def name = lib.size() > 1 ? lib[1] : group
         implementation(group: group.trim(), name: name.trim(), version: version.trim(), {
             transitive = false
         })
     }
-    compileOnly(group: 'org.apache.ant', name: 'ant', version: '1.10.5')
-    compileOnly(group: 'org.apache.ant', name: 'ant-junit', version: '1.10.5')
+
+    // libs not listed in dependencies.yml, but required for compilation
+    compileOnly(group: 'org.apache.ant', name: 'ant', version: '1.10.14')
+    compileOnly(group: 'org.apache.ant', name: 'ant-junit', version: '1.10.14')
     compileOnly group: 'com.google.code.maven-play-plugin.org.playframework', name: 'jj-simplecaptcha', version: '1.1'
 
+    testImplementation(group: 'org.apache.ant', name: 'ant', version: '1.10.14')
+    testImplementation(group: 'org.easytesting', name: 'fest-assert', version: '1.4')
+    testImplementation(group: 'org.easytesting', name: 'fest-util', version: '1.1.6')
+    testImplementation(group: 'org.mockito', name: 'mockito-core', version: '2.21.0')
+    testImplementation(group: 'org.objenesis', name: 'objenesis', version: '2.6')
 }
 
+task copyDependencies(type: Copy) {
+    from configurations.runtimeClasspath
+    into "lib-gradle"
+}
