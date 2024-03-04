@@ -47,23 +47,6 @@ sourceSets {
 
 def deps = new Yaml().load(file("dependencies.yml").text)
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId project.name
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url 'https://repo.nos.to/content/repositories/NostoDependencies/'
-            credentials {
-                username "$mavenUser"
-                password "$mavenPassword"
-            }
-        }
-    }
-}
 
 repositories {
     mavenLocal()
@@ -100,7 +83,53 @@ dependencies {
     testImplementation(group: 'org.objenesis', name: 'objenesis', version: '2.6')
 }
 
+jar {
+    manifest {
+        attributes 'Premain-Class': 'play.classloading.HotswapAgent',
+                'Can-Redefine-Classes': true,
+                'Built-JDK': System.getProperty('java.version'),
+                'Name': 'Play',
+                'Specification-Title': 'Play! framework'
+    }
+}
+
+task assembleRunscripts(type: Zip) {
+    archiveBaseName = 'play'
+    description "Assemble archive $archiveBaseName"
+    from("../play")
+    from("pym") {
+        into("framework/pym")
+    }
+    from("src/play/version") {
+        into("framework/src/play")
+    }
+}
+
 task copyDependencies(type: Copy) {
     from configurations.runtimeClasspath
     into "lib-gradle"
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId "play"
+
+            from components.java
+        }
+        mavenZip(MavenPublication) {
+            artifactId "play-zip"
+            artifact assembleRunscripts
+        }
+    }
+    repositories {
+        maven {
+            url 'https://repo.nos.to/content/repositories/NostoDependencies/'
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+        }
+    }
 }
