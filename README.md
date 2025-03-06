@@ -1,3 +1,6 @@
+# Note this version has been forked and no support is available
+
+
 # Welcome to Play framework
 
 [![GitHub Discussions](https://img.shields.io/github/discussions/playframework/play1?&logo=github&color=brightgreen)](https://github.com/playframework/play1/discussions)
