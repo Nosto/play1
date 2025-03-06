@@ -21,7 +21,7 @@ plugins {
 }
 
 group 'com.nosto.play'
-version '1.8.0-nosto-GA-4'
+version '1.8.0-nosto-GA-3'
 
 java {
     withSourcesJar()
@@ -54,7 +54,6 @@ def deps = new Yaml().load(file("dependencies.yml").text)
 repositories {
     mavenLocal()
     maven {
-        name "NostoCentral"
         url "https://repo.nos.to/content/repositories/central/"
         credentials {
             username = "$mavenUser"
@@ -62,7 +61,6 @@ repositories {
         }
     }
     maven {
-        name "NostoDependencies"
         url 'https://repo.nos.to/content/repositories/NostoDependencies/'
         credentials {
             username "$mavenUser"
@@ -195,7 +193,6 @@ publishing {
     }
     repositories {
         maven {
-            name "NostoDependencies"
             url 'https://repo.nos.to/content/repositories/NostoDependencies/'
             credentials {
                 username "$mavenUser"
