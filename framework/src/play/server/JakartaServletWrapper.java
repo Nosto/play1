@@ -514,7 +514,7 @@ public class JakartaServletWrapper extends HttpServlet implements ServletContext
         }
 
         servletResponse.setStatus(response.status);
-        if (!response.headers.containsKey("cache-control")) {
+        if (response.getHeader("cache-control") == null) {
             servletResponse.setHeader("Cache-Control", "no-cache");
         }
         Map<String, Http.Header> headers = response.headers;
@@ -522,7 +522,7 @@ public class JakartaServletWrapper extends HttpServlet implements ServletContext
             Http.Header hd = entry.getValue();
             String key = entry.getKey();
             for (String value : hd.values) {
-                servletResponse.setHeader(key, value);
+                servletResponse.addHeader(key, value);
             }
         }
 
