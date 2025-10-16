@@ -303,11 +303,12 @@ public class ApplicationCompiler {
                 applicationClasses.getApplicationClass(clazzName.toString()).compiled(clazzFile.getBytes());
             }
         };
+        CompilerOptions options = new CompilerOptions(settings);
 
         /**
          * The JDT compiler
          */
-        Compiler jdtCompiler = new Compiler(nameEnvironment, policy, settings, compilerRequestor, problemFactory) {
+        Compiler jdtCompiler = new Compiler(nameEnvironment, policy, options, compilerRequestor, problemFactory) {
 
             @Override
             protected void handleInternalException(Throwable e, CompilationUnitDeclaration ud, CompilationResult result) {
