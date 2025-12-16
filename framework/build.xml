@@ -2,7 +2,8 @@
 
 <project name="play! framework" default="jar" basedir="." xmlns:if="ant:if" xmlns:unless="ant:unless">
 
-    <property name="baseversion" value="1.7.x" />
+    <property name="baseversion" value="1.11.x" />
+    <property name="build-release" value="21" />
 
     <path id="project.classpath">
         <fileset dir=".">
@@ -64,7 +65,7 @@
 
     <target name="compile" description="compile without cleaning">
         <mkdir dir="classes"/>
-        <javac encoding="utf-8" srcdir="src" destdir="classes" debug="true" source="17" target="17">
+        <javac encoding="utf-8" srcdir="src" destdir="classes" debug="true" release="${build-release}">
             <classpath refid="project.classpath" />
         </javac>
         <copy todir="classes">
@@ -105,9 +106,14 @@
         </javadoc>
     </target>
 
+    <target name="build" description="Build play">
+        <antcall target="jar"/>
+    </target>
+
     <target name="jar" depends="clean,version,compile,modules" description="create play.jar">
         <echo message="${version}" file="src/play/version" />
         <echo message="${version}" file="classes/play/version" />
+        <echo message="build-release=${build-release}" />
         <jar destfile="play-${version}.jar" basedir="classes">
             <manifest>
                 <attribute name="Premain-Class" value="play.classloading.HotswapAgent"/>
@@ -129,6 +135,7 @@
 
     <target name="modules">
         <property name="play.path" value="../.."/>
+        <property name="build-release" value="${build-release}"/>
         <ant antfile="build.xml" target="build" dir="../modules/testrunner" />
         <ant antfile="build.xml" target="build" dir="../modules/grizzly" />
         <ant antfile="build.xml" target="build" dir="../modules/docviewer" />
@@ -231,9 +238,12 @@
     </target>
 
     <!-- Tests -->
-
-    <target name="compile-tests" depends="compile">
-        <javac encoding="utf-8" nowarn="${compile.nowarn}" debug="true"  destdir="classes" classpathref="project.classpath" srcdir="tests/src" source="17" target="17">
+    <target name="compile-tests" depends="version,compile">
+        <mkdir dir="test-classes"/>
+        <javac encoding="utf-8" nowarn="${compile.nowarn}" debug="true"
+               destdir="test-classes" classpathref="project.classpath" srcdir="test-src"
+               release="${build-release}">
+            <classpath refid="classpath.test" />
             <include name="**/*.java"/>
         </javac>
     </target>
@@ -342,41 +352,53 @@
         </nbjpdastart>
         <mkdir dir="tests-results" />
         <mkdir dir="${basedir}/tests-tmp" />
-        <junit errorproperty="tests.failed" failureproperty="tests.failed" fork="true" showoutput="true" tempdir="${basedir}/tests-tmp">
-            <test name="${testclass}" todir="tests-results" />
+        <junitlauncher failureproperty="tests.failed" printSummary="true" >
+            <testclasses>
+                <fileset dir="test-classes" includes="${testclass}.class" />
+                <fork>
+                    <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+                    <jvmarg value="-javaagent:${basedir}/play-${version}.jar" />
+                    <sysproperty key="tests-tmp" value="${basedir}/tests-tmp" />
+                </fork>
+            </testclasses>
             <classpath>
                 <pathelement path="classes"/>
                 <path refid="project.classpath"/>
             </classpath>
-            <formatter type="brief" usefile="false"/>
-            <formatter type="xml"/>
-            <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
-            <jvmarg value="-javaagent:${basedir}/play-${version}.jar" />
-            <sysproperty key="tests-tmp" value="${basedir}/tests-tmp" />
-        </junit>
+            <listener type="legacy-xml" sendSysOut="true" sendSysErr="true" outputdir="tests-results" />
+            <listener type="legacy-plain" sendSysOut="true" sendSysErr="true" outputdir="tests-results" />
+            <listener type="legacy-brief" sendSysOut="true" sendSysErr="true" outputdir="tests-results"  />
+        </junitlauncher>
         <delete dir="${basedir}/tests-tmp" />
+        <fail unless="junitlauncher.success" message="Single test failed. See reports!"/>
     </target>
 
     <target name="test-single" depends="compile-tests" description="run a single test">
         <mkdir dir="tests-results" />
         <mkdir dir="${basedir}/tests-tmp" />
-        <junit errorproperty="tests.failed" failureproperty="tests.failed" fork="true" showoutput="true" tempdir="${basedir}/tests-tmp" >
-            <test name="${testclass}" todir="tests-results" />
+        <junitlauncher failureproperty="tests.failed" printSummary="true" >
+            <testclasses>
+                <fileset dir="test-classes" includes="${testclass}.class" />
+                <fork>
+                    <jvmarg value="-javaagent:${basedir}/play-${version}.jar" />
+                    <sysproperty key="tests-tmp" value="${basedir}/tests-tmp" />
+                </fork>
+            </testclasses>
             <classpath>
                 <pathelement path="classes"/>
                 <path refid="project.classpath"/>
             </classpath>
-            <formatter type="brief" usefile="false"/>
-            <formatter type="xml"/>
-            <jvmarg value="-javaagent:${basedir}/play-${version}.jar" />
-            <sysproperty key="tests-tmp" value="${basedir}/tests-tmp" />
-        </junit>
+            <listener type="legacy-xml" sendSysOut="true" sendSysErr="true" outputdir="tests-results" />
+            <listener type="legacy-plain" sendSysOut="true" sendSysErr="true" outputdir="tests-results"/>
+            <listener type="legacy-brief" sendSysOut="true" sendSysErr="true" outputdir="tests-results"  />
+        </junitlauncher>
         <delete dir="${basedir}/tests-tmp" />
+        <fail unless="junitlauncher.success" message="Single test failed. See reports!"/>
     </target>
 
     <target name="compile-unittest" depends="compile">
         <mkdir dir="test-classes"/>
-        <javac encoding="utf-8" srcdir="test-src" destdir="test-classes" debug="true" source="17" target="17">
+        <javac encoding="utf-8" srcdir="test-src" destdir="test-classes" debug="true" release="${build-release}">
             <classpath refid="classpath.test" />
         </javac>
         <copy todir="test-classes">
@@ -389,6 +411,7 @@
                 <include name="**/*.gif"/>
                 <include name="**/*.png"/>
                 <include name="**/*.jpg"/>
+                <include name="**/IOTest/**"/>
             </fileset>
         </copy>
     </target>
@@ -398,14 +421,17 @@
     </target>
 
     <target name="unittest" depends="compile-unittest">
-        <junit errorproperty="junit.failure" failureproperty="junit.failure">
+        <junitlauncher haltonfailure="false" failureproperty="junit.failure" printSummary="true">
             <classpath refid="classpath.test" />
-            <formatter type="brief" usefile="false" />
-            <batchtest>
+            <testclasses>
                 <fileset dir="test-classes" includes="**/*Test.class" />
-            </batchtest>
-        </junit>
-        <fail if="junit.failure" message="Unit test(s) failed.  See reports!"/>
+            </testclasses>
+            <classpath>
+                <pathelement location="test-classes"/>
+                <path refid="classpath.test"/>
+            </classpath>
+        </junitlauncher>
+        <fail if="junit.failure" message="Unit test(s) failed. See reports!"/>
     </target>
 
     <target name="package" depends="artifact">

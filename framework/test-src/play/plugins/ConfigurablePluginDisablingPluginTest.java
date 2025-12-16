@@ -1,7 +1,7 @@
 package play.plugins;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import play.Play;
 import play.PlayBuilder;
 import play.PlayPlugin;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,7 +21,7 @@ import static org.fest.assertions.Assertions.assertThat;
  */
 public class ConfigurablePluginDisablingPluginTest {
 
-    @Before
+    @BeforeEach
     public void before(){
         //each test must begin with empty memory..
         ConfigurablePluginDisablingPlugin.previousDisabledPlugins.clear();
@@ -48,7 +48,7 @@ public class ConfigurablePluginDisablingPluginTest {
         ConfigurablePluginDisablingPlugin plugin = new ConfigurablePluginDisablingPlugin();
         plugin.onConfigurationRead();
 
-        assertThat(pc.getEnabledPlugins()).containsOnly(correctPluginListAfter.toArray());
+        assertThat(pc.getEnabledPlugins()).containsOnly(correctPluginListAfter.toArray(new PlayPlugin[0]));
     }
 
     @Test

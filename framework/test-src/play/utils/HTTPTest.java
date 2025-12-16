@@ -1,13 +1,16 @@
 package play.utils;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
 import java.util.Date;
 
 import static org.apache.commons.lang3.time.DateUtils.addDays;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.*;
 
 public class HTTPTest {
 

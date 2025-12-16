@@ -633,10 +633,7 @@ public class PlayHandler extends SimpleChannelUpstreamHandler {
             }
 
         } else {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            IOUtils.copy(new ChannelBufferInputStream(b), out);
-            byte[] n = out.toByteArray();
-            body = new ByteArrayInputStream(n);
+            body = new ByteArrayInputStream(new ChannelBufferInputStream(b).readAllBytes());
         }
 
         String host = nettyRequest.headers().get(HOST);

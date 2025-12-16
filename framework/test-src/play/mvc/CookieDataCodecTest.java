@@ -1,6 +1,6 @@
 package play.mvc;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static play.mvc.CookieDataCodec.decode;
 import static play.mvc.CookieDataCodec.encode;
 
@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.jboss.netty.handler.codec.http.cookie.Cookie;
 import org.jboss.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class CookieDataCodecTest {
 

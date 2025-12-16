@@ -1,7 +1,7 @@
 package play.cache;
 
-import org.junit.Test;
-import static org.fest.assertions.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class EhCacheImplTest {
 

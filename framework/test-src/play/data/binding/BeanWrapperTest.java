@@ -1,12 +1,12 @@
 package play.data.binding;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import play.PlayBuilder;
 import play.data.validation.ValidationBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
-import static org.fest.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BeanWrapperTest {
 
