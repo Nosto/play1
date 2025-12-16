@@ -21,7 +21,7 @@ plugins {
 }
 
 group 'com.nosto.play'
-version '1.8.0-nosto-GA-12'
+version '1.11.0-nosto-GA-1'
 
 java {
     withSourcesJar()
@@ -86,16 +86,16 @@ dependencies {
     implementation group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
 
     // libs not listed in dependencies.yml, but required for compilation
-    compileOnly(group: 'org.apache.ant', name: 'ant', version: '1.10.14')
+    compileOnly(group: 'org.apache.ant', name: 'ant', version: '1.10.15')
     compileOnly(group: 'org.apache.ant', name: 'ant-junit', version: '1.10.14')
     compileOnly group: 'com.google.code.maven-play-plugin.org.playframework', name: 'jj-simplecaptcha', version: '1.1'
 
-    testImplementation(group: 'org.apache.ant', name: 'ant', version: '1.10.14')
-    testImplementation(group: 'org.apache.ant', name: 'ant-junit', version: '1.10.14')
-    testImplementation(group: 'org.easytesting', name: 'fest-assert', version: '1.4')
-    testImplementation(group: 'org.easytesting', name: 'fest-util', version: '1.1.6')
-    testImplementation(group: 'org.mockito', name: 'mockito-core', version: '2.21.0')
-    testImplementation(group: 'org.objenesis', name: 'objenesis', version: '2.6')
+    testImplementation(group: 'org.apache.ant', name: 'ant', version: '1.10.15')
+    testImplementation(group: 'org.apache.ant', name: 'ant-junitlauncher', version: '1.10.15')
+    testImplementation(group: 'org.assertj', name: 'assertj-core', version: '3.27.3')
+    testImplementation(group: 'org.mockito', name: 'mockito-core', version: '5.19.0')
+    testImplementation(group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.19.0')
+    testImplementation(group: 'org.objenesis', name: 'objenesis', version: '3.4')
 }
 
 jar {

@@ -25,15 +25,7 @@ import play.mvc.Scope;
 import play.mvc.results.Result;
 import play.utils.Java;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ValidationPlugin extends PlayPlugin {
 
@@ -122,6 +114,7 @@ public class ValidationPlugin extends PlayPlugin {
     static class Validator extends Guard {
 
         public List<ConstraintViolation> validateAction(Method actionMethod) throws Exception {
+            List<ConstraintViolation> violations = new ArrayList<>();
             Object instance = null;
             // Patch for scala defaults
             if (!Modifier.isStatic(actionMethod.getModifiers()) && actionMethod.getDeclaringClass().getSimpleName().endsWith("$")) {

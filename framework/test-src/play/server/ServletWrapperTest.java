@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpUpgradeHandler;
 import jakarta.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -223,18 +225,6 @@ public class ServletWrapperTest {
             throw new RuntimeException("Method not implemented");
         }
 
-        public boolean authenticate(HttpServletResponse httpServletResponse) throws IOException, ServletException {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public void login(String s, String s1) throws ServletException {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public void logout() throws ServletException {
-            throw new RuntimeException("Method not implemented");
-        }
-
         public Collection<Part> getParts() throws IOException, ServletException {
             throw new RuntimeException("Method not implemented");
         }
@@ -243,15 +233,6 @@ public class ServletWrapperTest {
             throw new RuntimeException("Method not implemented");
         }
 
-        @Override
-        public Collection<Part> getParts() throws IOException, ServletException {
-            return List.of();
-        }
-
-        @Override
-        public Part getPart(String s) throws IOException, ServletException {
-            return null;
-        }
 
         @Override
         public <T extends HttpUpgradeHandler> T upgrade(Class<T> aClass) throws IOException, ServletException {
@@ -315,34 +296,6 @@ public class ServletWrapperTest {
 
         @Override
         public int getLocalPort() {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public ServletContext getServletContext() {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public AsyncContext startAsync() throws IllegalStateException {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) throws IllegalStateException {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public boolean isAsyncStarted() {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public boolean isAsyncSupported() {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public AsyncContext getAsyncContext() {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        public DispatcherType getDispatcherType() {
             throw new RuntimeException("Method not implemented");
         }
 
