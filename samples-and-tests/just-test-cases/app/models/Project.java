@@ -3,7 +3,6 @@ package models;
 import play.*;
 import play.data.validation.*;
 
-import jakarta.persistence.*;
 import java.util.*;
 
 public class Project  {
@@ -20,11 +19,8 @@ public class Project  {
     public Date startDate;
     
     @Required
-    @ManyToOne(cascade=CascadeType.PERSIST) 
     public Company company;
     
-    @OneToMany(cascade=CascadeType.PERSIST)
-    @MapKey(name="name")
     public Map<String,Company> companies;
     
     private String observation;

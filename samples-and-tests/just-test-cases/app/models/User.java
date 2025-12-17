@@ -3,7 +3,6 @@ package models;
 import play.data.binding.As;
 import play.data.validation.*;
 
-import jakarta.persistence.*;
 import java.util.*;
 
 public class User {
@@ -31,7 +30,6 @@ public class User {
     public String email;
     
     @Valid
-    @Transient
     public List<MyAddress> addresses;
 
 	public String toString() {
