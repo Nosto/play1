@@ -1,15 +1,12 @@
 package play.test;
 
-import org.junit.Rule;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import play.exceptions.UnexpectedException;
 
-@RunWith(PlayJUnitRunner.class)
-public abstract class BaseTest extends org.junit.Assert {
-
-    @Rule
-    public PlayJUnitRunner.StartPlay startPlayBeforeTests = PlayJUnitRunner.StartPlay.rule();
+@ExtendWith(PlayJUnitExtension.class)
+public abstract class BaseTest extends Assertions {
 
     /**
      * Pause the current thread

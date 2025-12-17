@@ -1,6 +1,6 @@
 package play.utils;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import play.Logger;
 import play.libs.IO;
 
@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.Properties;
 
-import static org.fest.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class OrderSafePropertiesTest {

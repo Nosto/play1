@@ -1,21 +1,23 @@
 package play.server;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpUpgradeHandler;
+import jakarta.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.security.Principal;
@@ -25,15 +27,16 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class ServletWrapperTest {
     private String browserEtag;
     private String browserLastModified;
     private long lastModified;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         browserEtag = "\"1299752290000-1192808478\"";
         browserLastModified = "Thu, 10 Mar 2011 10:18:10 GMT";
@@ -185,6 +188,9 @@ public class ServletWrapperTest {
         }
 
         @Override
+        public String changeSessionId() { throw new RuntimeException("Method not implemented"); }
+
+        @Override
         public HttpSession getSession(boolean arg0) {
             throw new RuntimeException("Method not implemented");
         }
@@ -205,18 +211,16 @@ public class ServletWrapperTest {
         }
 
         @Override
-        public boolean isRequestedSessionIdFromUrl() {
-            throw new RuntimeException("Method not implemented");
-        }
-
         public boolean authenticate(HttpServletResponse httpServletResponse) throws IOException, ServletException {
-            throw new RuntimeException("Method not implemented");
+            return false;
         }
 
+        @Override
         public void login(String s, String s1) throws ServletException {
             throw new RuntimeException("Method not implemented");
         }
 
+        @Override
         public void logout() throws ServletException {
             throw new RuntimeException("Method not implemented");
         }
@@ -227,6 +231,12 @@ public class ServletWrapperTest {
 
         public Part getPart(String s) throws IOException, ServletException {
             throw new RuntimeException("Method not implemented");
+        }
+
+
+        @Override
+        public <T extends HttpUpgradeHandler> T upgrade(Class<T> aClass) throws IOException, ServletException {
+            return null;
         }
 
         @Override
@@ -260,6 +270,11 @@ public class ServletWrapperTest {
         }
 
         @Override
+        public long getContentLengthLong() {
+            return 0;
+        }
+
+        @Override
         public String getContentType() {
             throw new RuntimeException("Method not implemented");
         }
@@ -284,31 +299,49 @@ public class ServletWrapperTest {
             throw new RuntimeException("Method not implemented");
         }
 
-        public ServletContext getServletContext() {
-            throw new RuntimeException("Method not implemented");
-        }
+        @Override
+        public ServletContext getServletContext() { throw new RuntimeException("Method not implemented"); }
 
-        public AsyncContext startAsync() throws IllegalStateException {
-            throw new RuntimeException("Method not implemented");
-        }
+        @Override
+        public AsyncContext startAsync() throws IllegalStateException { throw new RuntimeException("Method not implemented"); }
 
+        @Override
         public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) throws IllegalStateException {
             throw new RuntimeException("Method not implemented");
         }
 
+        @Override
         public boolean isAsyncStarted() {
             throw new RuntimeException("Method not implemented");
         }
 
+        @Override
         public boolean isAsyncSupported() {
             throw new RuntimeException("Method not implemented");
         }
 
+        @Override
         public AsyncContext getAsyncContext() {
             throw new RuntimeException("Method not implemented");
         }
 
+        @Override
         public DispatcherType getDispatcherType() {
+            throw new RuntimeException("Method not implemented");
+        }
+
+        @Override
+        public String getRequestId() {
+            throw new RuntimeException("Method not implemented");
+        }
+
+        @Override
+        public String getProtocolRequestId() {
+            return "";
+        }
+
+        @Override
+        public ServletConnection getServletConnection() {
             throw new RuntimeException("Method not implemented");
         }
 
@@ -349,11 +382,6 @@ public class ServletWrapperTest {
 
         @Override
         public BufferedReader getReader() throws IOException {
-            throw new RuntimeException("Method not implemented");
-        }
-
-        @Override
-        public String getRealPath(String arg0) {
             throw new RuntimeException("Method not implemented");
         }
 

@@ -1,16 +1,16 @@
 package play.modules.testrunner;
 
-import com.gargoylesoftware.htmlunit.AlertHandler;
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.ConfirmHandler;
-import com.gargoylesoftware.htmlunit.DefaultCssErrorHandler;
-import com.gargoylesoftware.htmlunit.DefaultPageCreator;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.PromptHandler;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.WebWindow;
-import com.gargoylesoftware.htmlunit.javascript.host.Window;
+import org.htmlunit.AlertHandler;
+
+import org.htmlunit.ConfirmHandler;
+import org.htmlunit.DefaultCssErrorHandler;
+import org.htmlunit.DefaultPageCreator;
+import org.htmlunit.Page;
+import org.htmlunit.PromptHandler;
+import org.htmlunit.WebClient;
+import org.htmlunit.WebResponse;
+import org.htmlunit.WebWindow;
+
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,9 +27,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.TimeZone;
 
-import net.sourceforge.htmlunit.corejs.javascript.Context;
-import net.sourceforge.htmlunit.corejs.javascript.ScriptRuntime;
-import net.sourceforge.htmlunit.corejs.javascript.ScriptableObject;
+
+import org.htmlunit.corejs.javascript.Context;
+import org.htmlunit.corejs.javascript.ScriptRuntime;
+import org.htmlunit.corejs.javascript.ScriptableObject;
+import org.htmlunit.BrowserVersion;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -85,162 +87,152 @@ public class FirePhoque {
 
         // Let's tweak WebClient
 
-        String headlessBrowser = System.getProperty("headlessBrowser", "FIREFOX_38");
+        String headlessBrowser = System.getProperty("headlessBrowser", "FIREFOX");
         BrowserVersion browserVersion;
         if ("CHROME".equals(headlessBrowser)) {
             browserVersion = BrowserVersion.CHROME;
-        } else if ("FIREFOX_38".equals(headlessBrowser)) {
-            browserVersion = BrowserVersion.FIREFOX_38;  
-        }    else if ("INTERNET_EXPLORER".equals(headlessBrowser)) {
-            browserVersion = BrowserVersion.INTERNET_EXPLORER;
-        }    else if ("INTERNET_EXPLORER_11".equals(headlessBrowser)) {
-            browserVersion = BrowserVersion.INTERNET_EXPLORER_11;
+        } else if ("FIREFOX".equals(headlessBrowser)) {
+            browserVersion = BrowserVersion.FIREFOX;
+        } else if ("INTERNET_EXPLORER".equals(headlessBrowser)) {
+            browserVersion = BrowserVersion.EDGE;
         } else if ("EDGE".equals(headlessBrowser)) {
             browserVersion = BrowserVersion.EDGE;
         } else {
-            browserVersion = BrowserVersion.FIREFOX_45;
+            browserVersion = BrowserVersion.FIREFOX;
         }
 
-        WebClient firephoque = new WebClient(browserVersion);
-        firephoque.setPageCreator(new DefaultPageCreator() {
-	    /**
-	     * Generated Serial version UID
-	     */
-	    private static final long serialVersionUID = 6690993309672446834L;
+        try (WebClient firephoque = new WebClient(browserVersion)) {
+            firephoque.setPageCreator(new DefaultPageCreator() {
+                /**
+                 * Generated Serial version UID
+                 */
+                private static final long serialVersionUID = 6690993309672446834L;
 
-	    @Override
-            public Page createPage(WebResponse wr, WebWindow ww) throws IOException {
-                Page page = createHtmlPage(wr, ww);
-                return page;
+                @Override
+                public Page createPage(WebResponse wr, WebWindow ww) throws IOException {
+                    return createHtmlPage(wr, ww);
+                }
+            });
+
+            firephoque.getOptions().setThrowExceptionOnFailingStatusCode(false);
+
+            int timeout = Integer.parseInt(System.getProperty("webclientTimeout", "-1"));
+            if (timeout >= 0) {
+                firephoque.getOptions().setTimeout(timeout);
             }
-        });
-        
-        firephoque.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        
-        Integer timeout = Integer.valueOf(System.getProperty("webclientTimeout", "-1"));
-        if(timeout >= 0){
-          firephoque.getOptions().setTimeout(timeout);
-        }
-        
-        firephoque.setAlertHandler(new AlertHandler() {
-            public void handleAlert(Page page, String message) {
+
+            firephoque.setAlertHandler((page, message) -> {
                 try {
                     ScriptableObject window = page.getEnclosingWindow().getScriptableObject();
-                    String script = "parent.selenium.browserbot.recordedAlerts.push('" + message.replace("'", "\\'")+ "');";
-                    Object result = ScriptRuntime.evalSpecial(Context.getCurrentContext(), window, window, new Object[] {script}, null, 0);
+                    String script = "parent.selenium.browserbot.recordedAlerts.push('" + message.replace("'", "\\'") + "');";
+                    ScriptRuntime.evalSpecial(Context.getCurrentContext(), window, window, new Object[]{script}, null, 0);
 
-                } catch(Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        });
-        firephoque.setConfirmHandler(new ConfirmHandler() {
-            public boolean handleConfirm(Page page, String message) {
+            });
+            firephoque.setConfirmHandler((page, message) -> {
                 try {
                     ScriptableObject window = page.getEnclosingWindow().getScriptableObject();
-                    String script = "parent.selenium.browserbot.recordedConfirmations.push('" + message.replace("'", "\\'")+ "');" +
+                    String script = "parent.selenium.browserbot.recordedConfirmations.push('" + message.replace("'", "\\'") + "');" +
                             "var result = parent.selenium.browserbot.nextConfirmResult;" +
                             "parent.selenium.browserbot.nextConfirmResult = true;" +
                             "result";
-                    
-                   Object result = ScriptRuntime.evalSpecial(Context.getCurrentContext(), window, window, new Object[] {script}, null, 0);
-                   // window.execScript(script,  "JavaScript");
 
-                   return (Boolean)result;
-                } catch(Exception e) {
+                    Object result = ScriptRuntime.evalSpecial(Context.getCurrentContext(), window, window, new Object[]{script}, null, 0);
+                    // window.execScript(script,  "JavaScript");
+
+                    return (Boolean) result;
+                } catch (Exception e) {
                     e.printStackTrace();
                     return false;
                 }
-            }
-        });
-        firephoque.setPromptHandler(new PromptHandler() {
-            public String handlePrompt(Page page, String message) {
+            });
+            firephoque.setPromptHandler((page, message, defaultValue) -> {
                 try {
                     ScriptableObject window = page.getEnclosingWindow().getScriptableObject();
-                    String script = "parent.selenium.browserbot.recordedPrompts.push('" + message.replace("'", "\\'")+ "');" +
+                    String script = "parent.selenium.browserbot.recordedPrompts.push('" + message.replace("'", "\\'") + "');" +
                             "var result = !parent.selenium.browserbot.nextConfirmResult ? null : parent.selenium.browserbot.nextPromptResult;" +
                             "parent.selenium.browserbot.nextConfirmResult = true;" +
                             "parent.selenium.browserbot.nextPromptResult = '';" +
                             "result";
-                    Object result = ScriptRuntime.evalSpecial(Context.getCurrentContext(), window, window, new Object[] {script}, null, 0);
+                    Object result = ScriptRuntime.evalSpecial(Context.getCurrentContext(), window, window, new Object[]{script}, null, 0);
                     //window.execScript(script,  "JavaScript");
-                    return (String)result;
+                    return result != null ? (String)result : defaultValue;
                 } catch(Exception e) {
                     e.printStackTrace();
                     return "";
                 }
-            }
-        });
-        firephoque.getOptions().setThrowExceptionOnScriptError(false);
-        firephoque.getOptions().setPrintContentOnFailingStatusCode(false);
+            });
+            firephoque.getOptions().setThrowExceptionOnScriptError(false);
+            firephoque.getOptions().setPrintContentOnFailingStatusCode(false);
 
-        // Go!
-        int maxLength = 0;
-        for (String test : tests) {
-            String testName = test.replace(".class", "").replace(".test.html", "").replace(".", "/").replace("$", "/");
-            if (testName.length() > maxLength) {
-                maxLength = testName.length();
-            }
-        }
-
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        df.setTimeZone(tz);
-        String timestamp = df.format(new Date());
-
-        System.out.println("~ " + timestamp +  ": " + tests.size() + " test" + (tests.size() != 1 ? "s" : "") + " to run:");
-        System.out.println("~");
-        firephoque.openWindow(new URL(app + "/@tests/init"), "headless");
-        boolean ok = true;
-        for (String test : tests) {
-            long start = System.currentTimeMillis();
-            String testName = test.replace(".class", "").replace(".test.html", "").replace(".", "/").replace("$", "/");
-            System.out.print("~ " + testName + "... ");
-            for (int i = 0; i < maxLength - testName.length(); i++) {
-                System.out.print(" ");
-            }
-            System.out.print("    ");
-            URL url;
-            if (test.endsWith(".class")) {
-                url = new URL(app + "/@tests/" + test);
-            } else {
-                url = new URL(app + "" + selenium + "?baseUrl=" + app + "&test=/@tests/" + test + ".suite&auto=true&resultsUrl=/@tests/" + test);
-            }
-            firephoque.openWindow(url, "headless");
-            firephoque.waitForBackgroundJavaScript(5 * 60 * 1000);
-            int retry = 0;
-            while(retry < 5) {
-                if (new File(root, test.replace("/", ".") + ".passed.html").exists()) {
-                    System.out.print("PASSED     ");
-                    break;
-                } else if (new File(root, test.replace("/", ".") + ".failed.html").exists()) {
-                    System.out.print("FAILED  !  ");
-                    ok = false;
-                    break;
-                } else {
-                    if(retry++ == 4) {
-                        System.out.print("ERROR   ?  ");
-                        ok = false;
-                        break;
-                    } else {
-                        Thread.sleep(1000);
-                    }
+            // Go!
+            int maxLength = 0;
+            for (String test : tests) {
+                String testName = test.replace(".class", "").replace(".test.html", "").replace(".", "/").replace("$", "/");
+                if (testName.length() > maxLength) {
+                    maxLength = testName.length();
                 }
             }
 
-            //
-            int duration = (int) (System.currentTimeMillis() - start);
-            int seconds = (duration / 1000) % 60;
-            int minutes = (duration / (1000 * 60)) % 60;
+            TimeZone tz = TimeZone.getTimeZone("UTC");
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            df.setTimeZone(tz);
+            String timestamp = df.format(new Date());
 
-            if (minutes > 0) {
-                System.out.println(minutes + " min " + seconds + "s");
-            } else {
-                System.out.println(seconds + "s");
+            System.out.println("~ " + timestamp +  ": " + tests.size() + " test" + (tests.size() != 1 ? "s" : "") + " to run:");
+            System.out.println("~");
+            firephoque.openWindow(new URL(app + "/@tests/init"), "headless");
+            boolean ok = true;
+            for (String test : tests) {
+                long start = System.currentTimeMillis();
+                String testName = test.replace(".class", "").replace(".test.html", "").replace(".", "/").replace("$", "/");
+                System.out.print("~ " + testName + "... ");
+                for (int i = 0; i < maxLength - testName.length(); i++) {
+                    System.out.print(" ");
+                }
+                System.out.print("    ");
+                URL url;
+                if (test.endsWith(".class")) {
+                    url = new URL(app + "/@tests/" + test);
+                } else {
+                    url = new URL(app + selenium + "?baseUrl=" + app + "&test=/@tests/" + test + ".suite&auto=true&resultsUrl=/@tests/" + test);
+                }
+                firephoque.openWindow(url, "headless");
+                firephoque.waitForBackgroundJavaScript(5 * 60 * 1000);
+                int retry = 0;
+                while (retry < 5) {
+                    if (new File(root, test.replace('/', '.') + ".passed.html").exists()) {
+                        System.out.print("PASSED     ");
+                        break;
+                    } else if (new File(root, test.replace('/', '.') + ".failed.html").exists()) {
+                        System.out.print("FAILED  !  ");
+                        ok = false;
+                        break;
+                    } else {
+                        if (retry++ == 4) {
+                            System.out.print("ERROR   ?  ");
+                            ok = false;
+                            break;
+                        } else {
+                            Thread.sleep(1000);
+                        }
+                    }
+                }
+
+                //
+                int duration = (int) (System.currentTimeMillis() - start);
+                int seconds = (duration / 1000) % 60;
+                int minutes = (duration / (1000 * 60)) % 60;
+
+                if (minutes > 0) {
+                    System.out.println(minutes + " min " + seconds + "s");
+                } else {
+                    System.out.println(seconds + "s");
+                }
             }
+            firephoque.openWindow(new URL(app + "/@tests/end?result=" + (ok ? "passed" : "failed")), "headless");
         }
-        firephoque.openWindow(new URL(app + "/@tests/end?result=" + (ok ? "passed" : "failed")), "headless");
-        
-        firephoque.close();
     }
 }

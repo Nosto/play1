@@ -1,17 +1,10 @@
 package models;
 
-import java.util.Objects;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
 import play.data.validation.Check;
 import play.data.validation.CheckWith;
 import play.data.validation.MinSize;
 import play.data.validation.Required;
 
-@Entity
 public class Bottle {
 
     @Required

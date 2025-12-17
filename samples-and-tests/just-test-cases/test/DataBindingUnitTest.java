@@ -1,7 +1,7 @@
 import java.io.File;
 import java.net.URLDecoder;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import play.libs.WS;
 import play.libs.WS.FileParam;

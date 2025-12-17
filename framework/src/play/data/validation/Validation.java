@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +118,7 @@ public class Validation {
      */
     public static boolean hasErrors() {
         Validation validation = current.get();
-        return validation != null && validation.errors.size() > 0;
+        return validation != null && !validation.errors.isEmpty();
     }
 
     /**

@@ -25,18 +25,7 @@ import play.mvc.Scope;
 import play.mvc.results.Result;
 import play.utils.Java;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ValidationPlugin extends PlayPlugin {
 
@@ -125,6 +114,7 @@ public class ValidationPlugin extends PlayPlugin {
     static class Validator extends Guard {
 
         public List<ConstraintViolation> validateAction(Method actionMethod) throws Exception {
+            List<ConstraintViolation> violations = new ArrayList<>();
             Object instance = null;
             // Patch for scala defaults
             if (!Modifier.isStatic(actionMethod.getModifiers()) && actionMethod.getDeclaringClass().getSimpleName().endsWith("$")) {
@@ -135,10 +125,11 @@ public class ValidationPlugin extends PlayPlugin {
                 }
             }
             Object[] rArgs = ActionInvoker.getActionMethodArgs(actionMethod, instance);
-            InternalValidationCycle validationCycle = new InternalValidationCycle(null, new String[]{"default"});
-            validateMethodParameters(null, actionMethod, rArgs, validationCycle);
-            validateMethodPre(null, actionMethod, rArgs, validationCycle);
-            return validationCycle.violations;
+            net.sf.oval.Validator.InternalValidationCycle cycle = new net.sf.oval.Validator.InternalValidationCycle(null, null);
+            cycle.violations = violations;
+            validateMethodParameters(null, actionMethod, rArgs, cycle);
+            validateMethodPre(null, actionMethod, rArgs, cycle);
+            return cycle.violations;
         }
     }
     static final Pattern errorsParser = Pattern.compile("\u0000([^:]*):([^\u0000]*)\u0000");

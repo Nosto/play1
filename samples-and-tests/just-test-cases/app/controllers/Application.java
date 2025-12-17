@@ -5,10 +5,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.apache.commons.mail.EmailAttachment;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.HtmlEmail;
-
+import jakarta.inject.Inject;
+import org.apache.commons.mail2.jakarta.EmailAttachment;
+import org.apache.commons.mail2.core.EmailException;
+import org.apache.commons.mail2.jakarta.HtmlEmail;
 import play.*;
 import play.mvc.*;
 import play.libs.*;
@@ -309,7 +309,7 @@ public class Application extends Controller {
 
     }
 
-    @javax.inject.Inject
+    @Inject
     static Test myTest;
 
     public static void useSpringBeanInject() {

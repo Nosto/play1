@@ -1,19 +1,20 @@
 package play.templates;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import play.PlayBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class GroovyTemplateTest {
 
-    @Before
+    @BeforeEach
     public void init(){
         new PlayBuilder().build();
     }
