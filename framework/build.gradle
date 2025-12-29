@@ -3,10 +3,11 @@ import org.yaml.snakeyaml.Yaml
 buildscript {
     repositories {
         maven {
-            url "https://repo.nos.to/content/repositories/central/"
+            name = "codeartifact"
+            url = uri("https://nosto-673366506863.d.codeartifact.us-east-1.amazonaws.com/maven/java/")
             credentials {
-                username = "$mavenUser"
-                password = "$mavenPassword"
+                username = "aws"
+                password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
             }
         }
     }
@@ -54,19 +55,11 @@ def deps = new Yaml().load(file("dependencies.yml").text)
 repositories {
     mavenLocal()
     maven {
-        name "NostoCentral"
-        url "https://repo.nos.to/content/repositories/central/"
+        name = "codeartifact"
+        url = uri("https://nosto-673366506863.d.codeartifact.us-east-1.amazonaws.com/maven/java/")
         credentials {
-            username = "$mavenUser"
-            password = "$mavenPassword"
-        }
-    }
-    maven {
-        name "NostoDependencies"
-        url 'https://repo.nos.to/content/repositories/NostoDependencies/'
-        credentials {
-            username "$mavenUser"
-            password "$mavenPassword"
+            username = "aws"
+            password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
         }
     }
 }
@@ -217,11 +210,11 @@ publishing {
     }
     repositories {
         maven {
-            name "NostoDependencies"
-            url 'https://repo.nos.to/content/repositories/NostoDependencies/'
+            name = "codeartifact"
+            url = uri("https://nosto-673366506863.d.codeartifact.us-east-1.amazonaws.com/maven/java/")
             credentials {
-                username "$mavenUser"
-                password "$mavenPassword"
+               username = "aws"
+               password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
             }
         }
     }

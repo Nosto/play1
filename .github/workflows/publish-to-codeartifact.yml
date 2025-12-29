@@ -1,0 +1,44 @@
+name: Publish to CodeArtifact
+
+on:
+  release:
+    types: [published]
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  publish:
+    runs-on:
+      group: Infrastructure
+      labels: [self-hosted, linux, arm64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'corretto'
+
+    - name: Login to CodeArtifact
+      run: |
+        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+          --domain-owner ${{ vars.CODEARTIFACT_DOMAIN_OWNER }} \
+          --region ${{ env.AWS_REGION }} \
+          --query authorizationToken \
+          --output text)
+        echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    - name: Run tests
+      run: ./gradlew test
+
+    - name: Publish to CodeArtifact
+      run: ./gradlew publish
+
