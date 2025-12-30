@@ -21,7 +21,7 @@ plugins {
 }
 
 group 'com.nosto.play'
-version '1.8.0-nosto-GA-12'
+version '1.8.0-nosto-GA-13'
 
 java {
     withSourcesJar()
@@ -112,10 +112,32 @@ tasks.named('sourcesJar', Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+task markVersion() {
+    outputs.upToDateWhen { false }
+    file("build/assemble/main/play").mkdirs()
+    file("build/assemble/main/play/version").text = "${project.version}\n"
+    file("build/assemble/main/play/.keep").text = ""
+}
+
 task assembleRunscripts(type: Zip) {
+    dependsOn assemble, markVersion
     archiveBaseName = 'play'
     description "Assemble archive $archiveBaseName"
+    // command
     from("../play")
+    // version
+    from("build/assemble/main/play/version") {
+        into("framework/src/play")
+    }
+    // lib folder compatibility
+    from("build/assemble/main/play/.keep") {
+        into("framework/lib")
+    }
+    // jar
+    from("build/libs/framework-${project.version}.jar") {
+        into("framework")
+        rename("framework-", "play-")
+    }
     from("pym") {
         into("framework/pym")
     }

@@ -21,6 +21,8 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 
 import play.Logger;
@@ -46,7 +48,11 @@ public class ApplicationCompiler {
         Map.entry("18", CompilerOptions.VERSION_18),
         Map.entry("19", CompilerOptions.VERSION_19),
         Map.entry("20", CompilerOptions.VERSION_20),
-        Map.entry("21", CompilerOptions.VERSION_21)
+        Map.entry("21", CompilerOptions.VERSION_21),
+        Map.entry("22", CompilerOptions.VERSION_22),
+        Map.entry("23", CompilerOptions.VERSION_23),
+        Map.entry("24", CompilerOptions.VERSION_24),
+        Map.entry("25", CompilerOptions.VERSION_25)
     );
 
     final Map<String, Boolean> packagesCache = new HashMap<>();
@@ -141,6 +147,11 @@ public class ApplicationCompiler {
         @Override
         public boolean ignoreOptionalProblems() {
             return false;
+        }
+
+        @Override
+        public ModuleBinding module(LookupEnvironment environment) {
+            return environment.UnNamedModule;
         }
     }
 
@@ -307,7 +318,7 @@ public class ApplicationCompiler {
         /**
          * The JDT compiler
          */
-        Compiler jdtCompiler = new Compiler(nameEnvironment, policy, settings, compilerRequestor, problemFactory) {
+        Compiler jdtCompiler = new Compiler(nameEnvironment, policy, new CompilerOptions(settings), compilerRequestor, problemFactory) {
 
             @Override
             protected void handleInternalException(Throwable e, CompilationUnitDeclaration ud, CompilationResult result) {
