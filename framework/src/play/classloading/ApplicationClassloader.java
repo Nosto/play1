@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -119,7 +120,9 @@ public class ApplicationClassloader extends ClassLoader {
                 Class<?> clazz = findLoadedClass(name);
                 if (clazz == null) {
                     if (name.endsWith("package-info")) {
-                        definePackage(getPackageName(name), null, null, null, null, null, null, null);
+                        if (getDefinedPackage(getPackageName(name)) == null) {
+                            definePackage(getPackageName(name), null, null, null, null, null, null, null);
+                        }
                     } else {
                         loadPackage(name);
                     }
@@ -151,14 +154,17 @@ public class ApplicationClassloader extends ClassLoader {
             }
 
             if (!applicationClass.isClass()) {
-                definePackage(applicationClass.getPackage(), null, null, null, null, null, null, null);
+                if (getDefinedPackage(applicationClass.getPackage()) == null) {
+                    definePackage(applicationClass.getPackage(), null, null, null, null, null, null, null);
+                }
             } else {
                 loadPackage(name);
             }
             if (bc != null) {
                 applicationClass.enhancedByteCode = bc;
-                applicationClass.javaClass = defineClass(applicationClass.name, applicationClass.enhancedByteCode, 0,
-                        applicationClass.enhancedByteCode.length, protectionDomain);
+                applicationClass.javaClass = Optional.<Class>ofNullable(findLoadedClass(applicationClass.name))
+                        .orElseGet(() -> defineClass(applicationClass.name, applicationClass.enhancedByteCode, 0,
+                                applicationClass.enhancedByteCode.length, protectionDomain));
                 resolveClass(applicationClass.javaClass);
                 if (!applicationClass.isClass()) {
                     applicationClass.javaPackage = applicationClass.javaClass.getPackage();
