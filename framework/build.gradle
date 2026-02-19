@@ -6,7 +6,7 @@ buildscript {
             name = "codeartifact"
             url = "$mavenUrl"
             credentials {
-                username = "$mavenUser
+                username = "$mavenUser"
                 password = "$mavenPassword"
             }
         }
