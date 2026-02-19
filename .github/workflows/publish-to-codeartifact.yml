@@ -31,7 +31,11 @@ jobs:
           --region ${{ env.AWS_REGION }} \
           --query authorizationToken \
           --output text)
-        echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+        cat <<EOS > gradle.properties
+          mavenUrl=${{ vars.CODEARTIFACT_DOMAIN }}-${{ vars.CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/maven/java
+          mavenUser=aws
+          mavenPassword=$CODEARTIFACT_AUTH_TOKEN
+        EOS
 
     - name: Build with Gradle
       run: ./gradlew build
