@@ -56,10 +56,10 @@ repositories {
     mavenLocal()
     maven {
         name = "codeartifact"
-        url = uri("https://nosto-673366506863.d.codeartifact.us-east-1.amazonaws.com/maven/java/")
+        url = "$mavenUrl"
         credentials {
-            username = "aws"
-            password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
+            username = "$mavenUser"
+            password = "$mavenPassword"
         }
     }
 }
