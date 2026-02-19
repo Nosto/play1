@@ -1,0 +1,48 @@
+name: Publish to CodeArtifact
+
+on:
+  release:
+    types: [published]
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  publish:
+    runs-on:
+      group: Infrastructure
+      labels: [self-hosted, linux, arm64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Set up JDK
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '21'
+        distribution: 'corretto'
+
+    - name: Login to CodeArtifact
+      run: |
+        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+          --domain-owner ${{ vars.CODEARTIFACT_DOMAIN_OWNER }} \
+          --region ${{ env.AWS_REGION }} \
+          --query authorizationToken \
+          --output text)
+        cat <<EOS > gradle.properties
+          mavenUrl=${{ vars.CODEARTIFACT_DOMAIN }}-${{ vars.CODEARTIFACT_DOMAIN_OWNER }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/maven/java
+          mavenUser=aws
+          mavenPassword=$CODEARTIFACT_AUTH_TOKEN
+        EOS
+
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    - name: Run tests
+      run: ./gradlew test
+
+    - name: Publish to CodeArtifact
+      run: ./gradlew publish
+
