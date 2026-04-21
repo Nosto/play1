@@ -10,8 +10,8 @@ env:
 jobs:
   publish:
     runs-on:
-      group: Infrastructure
-      labels: [self-hosted, linux, arm64]
+      group: infra-ci
+      labels: [self-hosted, linux, arm64, medium]
 
     steps:
     - name: Checkout code
